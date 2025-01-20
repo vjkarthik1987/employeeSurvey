@@ -4,6 +4,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/pricePelican');
 const RespondentSchema = new mongoose.Schema({
     respondentEmail: String,
     respondentName: String,
+    respondentTeam: String,
     surveyInstance: {
         type: mongoose.Schema.Types.ObjectId,
         ref:'SurveyInstance',

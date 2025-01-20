@@ -6,22 +6,23 @@ const QuestionSchema = new mongoose.Schema({
     category: String,
     subCategory: String,
     shortDescription: String,
+    detailedDescription: String,
     option1: String,
     option2: String,
     option3: String,
     option4: String,
     option5: String,
+    stage1: String,
+    stage2: String,
+    stage3: String,
+    stage4: String,
+    stage5: String,
+    actionPlans: [String],
     survey: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Survey',
     },
-    actionPlan: [String],
-    examples: [
-        {
-            company: String,
-            description: String,
-        }
-    ]
+    
 });
 
 const Question = mongoose.model('Question', QuestionSchema);
