@@ -1,0 +1,5 @@
+<% const date = new Date(article.date); %>
+<% dateFormatted = date.toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',}); %>
+<div class="mb-2">
+    <small><b><%= dateFormatted %></b></small>
+</div>

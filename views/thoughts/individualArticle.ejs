@@ -1,0 +1,19 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <%- include('../partials/navbar') %>
+    <div class="container">
+        <%- include('../partials/individualArticle/arrow') %>
+    </div>
+    <%- include('../partials/individualArticle/heading') %>
+    <div class="container">
+        <%- include('../partials/individualArticle/date') %>
+        <%- include('../partials/individualArticle/content') %>
+        <%- include('../partials/main/newsletter') %>
+    </div>
+    <%- include('../partials/footer') %>
+</body>

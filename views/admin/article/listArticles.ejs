@@ -1,0 +1,19 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../../partials/error') %>
+    <% } %>
+    <%- include('../../partials/sidebar') %>
+    <div class="main-content">
+        <h1>All Articles</h1>
+        <% for (article of articles) { %>
+            <div>
+                <b><%= article.heading %></b>
+                <p><%= article.article.substring(0,300) %>...</p>
+                <a href="/thoughts/articles/<%= article._id %>" type="button" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Read more</a>
+            </div>
+        <% } %>
+    </div>
+</body>

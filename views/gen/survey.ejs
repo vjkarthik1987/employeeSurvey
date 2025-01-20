@@ -1,0 +1,17 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <%- include('../partials/navbar') %>
+    <%- include('../partials/surveys/hero') %>
+    <div class="container my-3">
+        <%- include('../partials/surveys/details') %>
+        <%- include('../partials/main/howItWorks') %>
+        <%- include('../partials/surveys/surveys') %>
+        <%- include('../partials/main/newsletter') %>
+    </div>
+    <%- include('../partials/footer') %>
+</body>

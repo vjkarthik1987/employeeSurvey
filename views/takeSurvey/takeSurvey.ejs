@@ -1,0 +1,29 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <p>Welcome <%= respondent.respondentName %></p>
+    <h1>Take the <%= survey.name %></h1>
+    <form action="/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>" method="POST">
+        <% for (category of uniqueCategories) { %>
+            <h4><%= category %></h4>
+            <div class="ms-4">
+                <% for (question of questions) { %>
+                    <% if (question.category == category) { %>
+                        <p class="mb-1"><b><%= question.question %></b></p>
+                        <% for (let i = 1; i <= 5; i++) { %>
+                            <div>
+                                <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>">
+                                <label><%= question['option' + i] %></label>
+                            </div>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </div>
+        <% } %>
+        <button type="submit">Complete</button>
+    </form> 
+</body>

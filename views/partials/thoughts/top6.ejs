@@ -1,0 +1,19 @@
+<div>
+    <div class="row mx-0 px-0">
+        <div class="px-0">
+            <h1 class="mb-3">Read our latest insights</h1>
+            <div class="row mx-0 px-0">
+                <% for (article of articles) { %>
+                    <div class="col col-12 col-md-4 mx-0 px-0 mb-3">
+                        <div class="contentHolder pt-2">
+                            <p class="fw-bold"><%= article.heading %></p>
+                            <div>
+                                <a href="/thoughts/articles/<%= article._id %>" class="btn btn-sm btn-primary">Read more</a>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>

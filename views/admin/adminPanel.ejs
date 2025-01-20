@@ -1,0 +1,15 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+        <h1>Admin Panel</h1>
+        <h2>Aricles</h2>
+        <a href="/admin/article">Create Article</a>
+        <a href="/admin/article/list">List of articles</a>
+    </div>
+</body>

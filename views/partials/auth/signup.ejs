@@ -1,0 +1,19 @@
+<div id="loginSignupForm" >
+    <form action="/account" method="post" class="col-12 col-md-6 col-lg-6 col-xl-4">
+        <h1>Create a new account</h1>
+        <label for="name" class="form-label">Enter account username</label>
+        <input type="text" name="name" id="name" class="form-control">
+        <label for="email" class="form-label">Enter account email</label>
+        <input type="email" name="email" id="email" class="form-control">
+        <label for="password" class="form-label">Enter password</label>
+        <input type="password" name="password" id="password" class="form-control">
+        <label for="confirmPassword" class="form-label">Reenter password</label>
+        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control">
+        <div class="mb-2">
+            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+        </div>
+        <div>
+            <p class="mb-1 small">Already  have an account <a href="/auth/login">Login</a></p>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,35 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../../partials/error') %>
+    <% } %>
+    <%- include('../../partials/sidebar') %>
+    <div class="main-content">
+        <form action="/admin/article" method="post">
+            <h1>Create Article</h1>
+            <label for="heading" class="form-label">Article Heading</label>
+            <input type="text" class="form-control" name="heading">
+            <label for="topic" class="form-label">Article Topic</label>
+            <input type="text" class="form-control" name="topic">
+            <label for="article" class="form-label">Write the article</label>
+            <textarea name="article" cols="30" rows="10" class="form-control"></textarea>
+            <button type="submit" class="btn btn-primary">Add Article</button>
+        </form>
+    </div>
+
+    <!-- Include the TinyMCE script -->
+    <script src="https://cdn.tiny.cloud/1/by3zdxkpihscunk2zf5t3otxqfzz3r0grq6fgr69b83lf6hq/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <!-- Initialize TinyMCE -->
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'lists link image table preview code',
+            toolbar: 'undo redo | styles | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | link image',
+            menubar: false, // Hide the menu bar
+            height: 400, // Set the height of the editor
+        });
+    </script>
+</body>

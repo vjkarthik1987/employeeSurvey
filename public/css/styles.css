@@ -1,0 +1,228 @@
+html, body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    color: #f97216;
+}
+
+h4 {
+    color:  #98887f;
+}
+
+/* Classes */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.main-content {
+    margin-left: 260px; /* Leave space for the sidebar */
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-top: 0;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+}
+
+.sidebar ul li a:hover {
+    text-decoration: underline;
+    color: #007BFF;
+}
+
+.circle {
+    background-color: #ffc30c; /* Dark background */
+    color: #fff; /* White text */
+    width: 80px; /* Fixed width */
+    height: 80px; /* Fixed height */
+    border-radius: 50%; /* Make it circular */
+    display: flex; /* Enable flexbox for centering */
+    align-items: center; /* Vertically center the text */
+    justify-content: center; /* Horizontally center the text */
+    font-size: 1.5rem; /* Adjust font size for better visibility */
+    font-weight: bold; /* Make the text bold */
+    margin: 0 auto; /* Center horizontally in the column */
+}
+
+.circular-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ff4429;
+    color: white;
+    font-size: 20px;
+    text-decoration: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.circular-button:hover {
+    background-color: #d93b21;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+}
+
+.contentHolder {
+    border-left: 3px solid #ff4429;
+    padding-left: 10px;
+    padding-right: 15px;
+    height: 275px;
+    display: flex;
+    flex-direction: column;
+    justify-content:space-around;
+}
+
+.contentHolder:hover {
+    background-color: #F1F1F1;
+}
+
+.contentHolder p {
+    font-size: 2em;
+}
+
+/* IDs */
+
+#hero {
+    min-height: 30vh;
+    margin-bottom: 20px;
+}
+
+#offerings {
+    margin-bottom: 10px;
+}
+
+#newsletter {
+    padding: 50px 0;
+}
+
+#newsletter h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+#newsletter p {
+    font-size: 1rem;
+    color: #666;
+}
+
+#newsletter .form-control {
+    height: 50px;
+    font-size: 1rem;
+    padding: 10px;
+}
+
+#newsletter .btn-primary {
+    height: 50px;
+    font-size: 1rem;
+    padding: 0 20px;
+}
+
+#footer {
+    background-color: #ff4429;
+    margin-top: auto;
+    background-color: #ff4429;
+}
+
+#loginSignupForm {
+    min-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#loginSignupForm form {
+    border: 1px solid lightgrey;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#loginSignupForm input {
+    border: 0px;
+    border-bottom: 1px solid lightgrey;
+    border-radius: 0px;
+    margin-bottom: 15px;
+}
+
+#subHero {
+    min-height: 50vh;
+    background-color: #F1F1F1;
+}
+
+#articleHeading {
+    min-height: 30vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+form h1{
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* Bootstrap  */
+.btn {
+    border-radius: 0;
+}
+
+.btn-primary {
+    background-color: #ff4429;
+    border: 1px solid #ff4429;
+}
+
+.btn-outline-secondary {
+    background-color: transparent;
+    color: #ff4429;
+    border: 1px solid #ff4429;
+}
+
+/* Media query for tablets and smaller devices */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+

@@ -1,0 +1,12 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <h1>Individual Survey</h1>
+    <p><a href="/app/survey/<%= survey._id %>/surveyInstance">Create New Survey Instance</a></p>
+    <p><a href="/app/survey/<%= survey._id %>/list">See all survey instances for <%= survey.name %></a></p>
+</body>
+
