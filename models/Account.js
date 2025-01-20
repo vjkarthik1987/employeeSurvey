@@ -1,7 +1,8 @@
-const mongoose              = require('mongoose');
 const crypto = require('crypto');
 const passportLocalMongoose = require('passport-local-mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/pricePelican');
+const industries = require('../data/industry');
+const mongoose = require("../db"); // Use centralized DB connection
+
 
 const AccountSchema = new mongoose.Schema({
     name: {
@@ -32,6 +33,8 @@ const AccountSchema = new mongoose.Schema({
     },
     industry: {
         type: String,
+        enum: industries,
+        required: true,
     }
 });
 // Add passport-local-mongoose plugin

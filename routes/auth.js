@@ -2,10 +2,11 @@ const express          = require('express');
 const router           = express.Router();
 const passport         = require('passport');
 const Account          = require('../models/Account');
-const catchAsync = require('../utils/catchAsync');
+const catchAsync       = require('../utils/catchAsync');
+const industries       = require('../data/industry');
 
 router.get('/signup', catchAsync(async(req, res) => {
-    res.render('./auth/signup');
+    res.render('./auth/signup', {industries});
 }));
 
 router.get('/login', catchAsync(async(req, res) => {

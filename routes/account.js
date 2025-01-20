@@ -5,14 +5,21 @@ const isLoggedIn       = require('../middlewares/isLoggedIn')
 const catchAsync       = require('../utils/catchAsync');
 const Account          = require('../models/Account');
 const sendEmail        = require('../utils/sendSignupEmail');
-const sendSignupEmail = require('../utils/sendSignupEmail');
+const sendSignupEmail  = require('../utils/sendSignupEmail');
+const industries       = require('../data/industry');
 
 router.post('/', catchAsync(async (req, res) => {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, industry } = req.body;
 
     // Check if passwords match
     if (password !== confirmPassword) {
-        req.flash('error', 'Passwords do not match.')
+        req.flash('error', 'Passwords do not match.');
+        return res.redirect('/auth/signup');
+    }
+
+    // Validate industry selection
+    if (!industries.includes(industry)) {
+        req.flash('error', 'Invalid industry selected.');
         return res.redirect('/auth/signup');
     }
 
@@ -20,8 +27,8 @@ router.post('/', catchAsync(async (req, res) => {
         // Generate a unique verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
-        // Create the account with the verification token
-        const account = new Account({ name, email, verificationToken });
+        // Create the account with industry field
+        const account = new Account({ name, email, industry, verificationToken });
         await Account.register(account, password);
 
         // Send verification email
