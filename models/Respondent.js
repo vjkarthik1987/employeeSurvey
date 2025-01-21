@@ -14,6 +14,10 @@ const RespondentSchema = new mongoose.Schema({
         ref:'Response',
     }],
     status:Boolean,
+    progress:{
+        type: String,
+        enum: ['new','saved','completed']
+    }
 });
 
 const Respondent = mongoose.model('Respondent', RespondentSchema);

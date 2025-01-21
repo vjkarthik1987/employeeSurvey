@@ -1,81 +1,85 @@
 <% layout('./layouts/boilerplate') -%>
 <body>
+    <%- include('../partials/sidebar') %>
     <% if(success && success.length) { %>
         <%- include('../partials/success') %>
     <% } else if (error && error.length) { %>
         <%- include('../partials/error') %>
     <% } %>
-    <h1>Survey Instance: <%= surveyInstance.name %></h1>
-    <p>Survey: <%= survey.name %></p>
-
-    <% if (surveyInstance.status === 'Created') { %>
-        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" class="btn btn-primary">Send Email</a>
-    <% } %>
-
-    <h3>Respondents</h3>
-    <% if (surveyInstance.respondents.length > 0) { %>
-        <ul>
-            <% surveyInstance.respondents.forEach(respondent => { %>
-                <li>
-                    <strong>Name:</strong> <%= respondent.respondentName %> |
-                    <strong>Email:</strong> <%= respondent.respondentEmail %> |
-                    <strong>Status:</strong> <%= respondent.status ? 'In Progress' : 'Completed' %>
-                </li>
-            <% }) %>
-        </ul>
-    <% } else { %>
-        <p>No respondents found for this survey instance.</p>
-    <% } %>
-
-    <div id="result">
-        <% if (overallAverageScore !== null) { %>
-            <div id="details">
-                <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
-                
-                <h3>Category-wise Average Scores:</h3>
-                <ul>
-                    <% for (const category in categoryAverages) { %>
-                        <li><strong><%= category %>:</strong> <%= categoryAverages[category] %></li>
-                    <% } %>
-                </ul>
-
-                <h3>Detailed Scores</h3>
-                <table border="1" cellpadding="10">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Short Description</th>
-                            <th>Average Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% detailedScores.forEach(score => { %>
-                            <tr>
-                                <td><%= score.category %></td>
-                                <td><%= score.shortDescription %></td>
-                                <td><%= score.score %></td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-
-                <h3>Immediate Plan of Action</h3>
-                <% for (const category in categoryAverages) { %>
-                    <h4><%= category %></h4>
-                    <ul>
-                        <% detailedScores
-                            .filter(score => score.category === category)
-                            .forEach(score => { %>
-                            <li>
-                                <strong><%= score.shortDescription %>:</strong> 
-                            </li>
-                            <%= score.actionPlan || 'No action plan available' %>
-                        <% }) %>
-                    </ul>
-                <% } %>
-            </div>
-        <% } else { %>
-            <p>Average Score: Not available</p>
+    <div class="main-content">
+        <a href="/app/survey/home">Home</a><b> ></b>
+        <a href="/app/survey/<%= survey._id %>/list">Survey: <%= survey.name %><a><b> ></b>
+        <%= surveyInstance.name %>
+        <h1><%= surveyInstance.name %></h1>
+        <% if (surveyInstance.status === 'Created') { %>
+            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" class="btn btn-primary">Send Email</a>
         <% } %>
+    
+        <h3>Respondents</h3>
+        <% if (surveyInstance.respondents.length > 0) { %>
+            <ul>
+                <% surveyInstance.respondents.forEach(respondent => { %>
+                    <li>
+                        <strong>Name:</strong> <%= respondent.respondentName %> |
+                        <strong>Email:</strong> <%= respondent.respondentEmail %> |
+                        <strong>Status:</strong> <%= respondent.status ? 'In Progress' : 'Completed' %>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <p>No respondents found for this survey instance.</p>
+        <% } %>
+    
+        <div id="result">
+            <% if (overallAverageScore !== null) { %>
+                <div id="details">
+                    <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
+                    
+                    <h3>Category-wise Average Scores:</h3>
+                    <ul>
+                        <% for (const category in categoryAverages) { %>
+                            <li><strong><%= category %>:</strong> <%= categoryAverages[category] %></li>
+                        <% } %>
+                    </ul>
+    
+                    <h3>Detailed Scores</h3>
+                    <table border="1" cellpadding="10">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Short Description</th>
+                                <th>Average Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% detailedScores.forEach(score => { %>
+                                <tr>
+                                    <td><%= score.category %></td>
+                                    <td><%= score.shortDescription %></td>
+                                    <td><%= score.score %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+    
+                    <h3>Immediate Plan of Action</h3>
+                    <% for (const category in categoryAverages) { %>
+                        <h4><%= category %></h4>
+                        <ul>
+                            <% detailedScores
+                                .filter(score => score.category === category)
+                                .forEach(score => { %>
+                                <li>
+                                    <strong><%= score.shortDescription %>:</strong> 
+                                </li>
+                                <%= score.actionPlan || 'No action plan available' %>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                </div>
+            <% } else { %>
+                <p>Average Score: Not available</p>
+            <% } %>
+        </div>
     </div>
 </body>

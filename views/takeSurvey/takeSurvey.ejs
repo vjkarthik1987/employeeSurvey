@@ -5,25 +5,130 @@
     <% } else if (error && error.length) { %>
         <%- include('../partials/error') %>
     <% } %>
-    <p>Welcome <%= respondent.respondentName %></p>
-    <h1>Take the <%= survey.name %></h1>
-    <form action="/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>" method="POST">
-        <% for (category of uniqueCategories) { %>
-            <h4><%= category %></h4>
-            <div class="ms-4">
-                <% for (question of questions) { %>
-                    <% if (question.category == category) { %>
-                        <p class="mb-1"><b><%= question.question %></b></p>
-                        <% for (let i = 1; i <= 5; i++) { %>
-                            <div>
-                                <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>">
-                                <label><%= question['option' + i] %></label>
-                            </div>
+
+    <% if (respondent.progress === 'completed') { %>
+        <p><b>You have already taken the survey.</b></p>
+    <% } else { %>
+        <p>Welcome <%= respondent.respondentName %></p>
+        <h1>Take the <%= survey.name %></h1>
+        <p>There are <%= questions.length %> questions in this survey, and it will take you approximately <%= Math.ceil(0.8 * questions.length) %> minutes to complete. <b>Your responses are purely confidential and will not be tagged against you.</b></p>
+
+        <% let totalQuestions = questions.length; %> <!-- ✅ Ensure totalQuestions is defined before JavaScript -->
+
+        <form id="surveyForm" action="/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>" method="POST">
+            <% for (category of uniqueCategories) { %>
+                <h4><%= category %></h4>
+                <div class="ms-4">
+                    <% for (question of questions) { %>
+                        <% if (question.category == category) { %>
+                            <p class="mb-1 question" data-question-id="<%= question._id %>">
+                                <b><%= question.question %></b> <span class="required">*</span>
+                                <span class="error-message" style="color: red; display: none;">(Required)</span>
+                            </p>
+                            <% for (let i = 1; i <= 5; i++) { %>
+                                <div>
+                                    <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>" class="answer-option"
+                                        <% if (responseMap && responseMap[question._id] == i) { %> checked <% } %>
+                                        required>
+                                    <label><%= question['option' + i] %></label>
+                                </div>
+                            <% } %>
                         <% } %>
                     <% } %>
-                <% } %>
-            </div>
-        <% } %>
-        <button type="submit">Complete</button>
-    </form> 
+                </div>
+            <% } %>
+            <button type="submit" class="mb-5">Complete</button>
+            <button type="button" id="saveProgress" class="mb-5">Save Progress</button>
+        </form>
+
+        <!-- Sticky Footer -->
+        <div id="progressFooter">
+            <p><span id="answeredCount">0</span>/<%= totalQuestions %> questions answered</p>
+        </div>
+    <% } %>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const totalQuestions = <%= totalQuestions %>; // ✅ Now totalQuestions is properly defined
+            const answeredCount = document.getElementById("answeredCount");
+            const answerOptions = document.querySelectorAll(".answer-option");
+            const submitButton = document.querySelector("#surveyForm button[type='submit']");
+            const saveButton = document.getElementById("saveProgress");
+
+            function updateProgress() {
+                const answered = new Set();
+                answerOptions.forEach(option => {
+                    if (option.checked) {
+                        answered.add(option.name);
+                    }
+                });
+                answeredCount.textContent = answered.size;
+            }
+
+            function validateForm(event) {
+                let allAnswered = true;
+                document.querySelectorAll(".question").forEach(question => {
+                    const questionId = question.getAttribute("data-question-id");
+                    const radioButtons = document.querySelectorAll(`input[name='responses[${questionId}]']:checked`);
+                    const errorMessage = question.querySelector(".error-message");
+                    
+                    if (radioButtons.length === 0) {
+                        allAnswered = false;
+                        errorMessage.style.display = "inline";
+                    } else {
+                        errorMessage.style.display = "none";
+                    }
+                });
+                
+                if (!allAnswered) {
+                    event.preventDefault();
+                    alert("Please answer all required questions before submitting.");
+                }
+            }
+
+            function saveProgress() {
+                const formData = new FormData(document.getElementById("surveyForm"));
+                fetch("/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>/save", {
+                    method: "POST",
+                    body: formData
+                }).then(response => response.json()).then(data => {
+                    if (data.success) {
+                        alert("Progress saved successfully!");
+                    } else {
+                        alert("Failed to save progress.");
+                    }
+                }).catch(error => {
+                    alert("An error occurred while saving progress.");
+                });
+            }
+
+            answerOptions.forEach(option => {
+                option.addEventListener("change", updateProgress);
+            });
+            submitButton.addEventListener("click", validateForm);
+            saveButton.addEventListener("click", saveProgress);
+            
+            updateProgress();
+        });
+    </script>
+
+    <style>
+        /* Sticky Footer */
+        #progressFooter {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #f8f9fa;
+            padding: 1px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-top: 1px solid #ccc;
+        }
+
+        .required {
+            color: red;
+        }
+    </style>
 </body>

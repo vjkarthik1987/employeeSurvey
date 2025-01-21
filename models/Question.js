@@ -12,17 +12,11 @@ const QuestionSchema = new mongoose.Schema({
     option3: String,
     option4: String,
     option5: String,
-    stage1: String,
-    stage2: String,
-    stage3: String,
-    stage4: String,
-    stage5: String,
     actionPlans: [String],
     survey: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Survey',
     },
-    
 });
 
 const Question = mongoose.model('Question', QuestionSchema);

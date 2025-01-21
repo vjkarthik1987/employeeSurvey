@@ -74,6 +74,7 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                             ...respondentData,
                             surveyInstance: surveyInstance._id,
                             status: true,
+                            progress: 'new' // Set progress status to 'new'
                         });
                         await respondent.save();
                         return respondent._id;
@@ -130,6 +131,7 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
     let totalResponses = 0; // Total number of responses across all respondents
     let totalScoreSum = 0; // Sum of all response scores for overall average
 
+
     if (surveyInstance.respondents.length > 0) {
         const categoryScores = {}; // Category-wise scores
 
@@ -140,8 +142,9 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
                     surveyInstance: surveyInstanceID,
                 }).populate({
                     path: 'question',
-                    select: 'category shortDescription actionPlan question option1 option2 option3 option4 option5'
+                    select: 'category shortDescription detailedDescription actionPlans question option1 option2 option3 option4 option5'
                 });
+
 
                 if (responses.length > 0) {
                     // Update total score and response count
@@ -149,7 +152,7 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
                     totalResponses += responses.length;
 
                     responses.forEach((response) => {
-                        const { category, shortDescription, actionPlan } = response.question;
+                        const { category, shortDescription, actionPlans } = response.question;
                         const roundedScore = Math.round(response.choice);
 
                         // Initialize data for the question if not already present
@@ -159,7 +162,7 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
                                 shortDescription,
                                 totalScore: 0,
                                 responseCount: 0,
-                                actionPlan: actionPlan || [],
+                                actionPlans: actionPlans || [],
                             };
                         }
 
@@ -195,7 +198,7 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
             const questionData = questionScores[shortDescription];
             const averageScore = (questionData.totalScore / questionData.responseCount).toFixed(2);
             const correspondingPlan =
-                questionData.actionPlan[Math.round(averageScore) - 1] || 'No action plan available';
+                questionData.actionPlans[Math.round(averageScore) - 1] || 'No action plan available';
 
             detailedScores.push({
                 category: questionData.category,
