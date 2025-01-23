@@ -11,13 +11,15 @@
         <div>
             <% surveyInstances.forEach(instance => { %>
                 <p>
-                    <a href="/app/survey/<%= instance.survey %>/<%= instance._id %> "><%= instance.name %></a>
+                    <a href="/app/survey/<%= instance.survey %>/<%= instance._id %>"><%= instance.name %></a>
                     &nbsp;&nbsp;
-                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeletion('<%= instance._id %>')">Delete</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal('<%= instance.survey %>', '<%= instance._id %>', '<%= instance.name %>', '<%= instance.endDate %>')">Edit</button>
+                    &nbsp;&nbsp;
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeletion('<%= instance.survey %>', '<%= instance._id %>')">Delete</button>
                 </p>
             <% }) %>
         </div>
-    
+
         <!-- Confirmation Modal -->
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -39,35 +41,72 @@
             </div>
         </div>
     </div>
-    
-    <script>
-        let instanceToDelete = null;
 
-        function confirmDeletion(instanceId) {
-            instanceToDelete = instanceId;
+    <script>
+        let surveyIDToDelete = null;
+        let instanceToDelete = null;
+        let surveyIdToEdit = null;
+        let instanceToEdit = null;
+    
+        function confirmDeletion(surveyID, instanceID) {
+            surveyIDToDelete = surveyID;
+            instanceToDelete = instanceID;
             const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
             modal.show();
         }
-
+    
+        function openEditModal(surveyId, instanceId, instanceName, endDate) {
+            instanceToEdit = instanceId;
+            surveyIdToEdit = surveyId;
+            document.getElementById('editName').value = instanceName;
+            document.getElementById('editEndDate').value = endDate;
+            document.getElementById('editInstanceId').value = instanceId;
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+        }
+    
+        function submitEditForm() {
+            document.getElementById('editInstanceForm').action = `/app/survey/${surveyIdToEdit}/${instanceToEdit}/edit`;
+            document.getElementById('editInstanceForm').submit();
+        }
+    
         document.getElementById('confirmDeleteButton').addEventListener('click', async () => {
             const input = document.getElementById('deleteConfirmationInput');
             const errorMessage = document.getElementById('errorMessage');
-
+            
             if (input.value.toLowerCase() === 'delete') {
                 errorMessage.style.display = 'none';
 
                 try {
-                    const response = await fetch(`/app/survey/${instanceToDelete}/delete`, {
+                    console.log(`Deleting surveyInstance: ${instanceToDelete} in survey: ${surveyIDToDelete}`);
+
+                    const response = await fetch(`/app/survey/${surveyIDToDelete}/${instanceToDelete}/delete`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                     });
 
+                    const result = await response.json();
+                    console.log("Delete response:", result);
+
                     if (response.ok) {
-                        location.reload(); // Reload the page on successful deletion
+                        console.log("Survey instance deleted successfully.");
+
+                        // Get modal instance safely
+                        const modalElement = document.getElementById('deleteModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+
+                        // Refresh page after modal is hidden
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
                     } else {
-                        alert('Failed to delete the survey instance.');
+                        alert(`Failed to delete the survey instance: ${result.message}`);
                     }
                 } catch (err) {
                     console.error('Error deleting instance:', err);
@@ -76,5 +115,5 @@
                 errorMessage.style.display = 'block';
             }
         });
-    </script>
+    </script>    
 </body>

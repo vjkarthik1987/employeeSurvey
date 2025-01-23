@@ -1,5 +1,5 @@
-const mongoose              = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/pricePelican');
+const mongoose = require("../db"); // Use centralized DB connection
+
 
 const ArticleSchema = new mongoose.Schema({
     heading: String,

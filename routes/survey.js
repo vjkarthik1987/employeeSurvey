@@ -34,13 +34,15 @@ router.get('/:surveyID/surveyInstance', isLoggedIn, catchAsync(async (req, res) 
 router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFile'), catchAsync(async (req, res) => {
     const { surveyID } = req.params;
     const accountID = req.user._id;
-    const { name } = req.body;
+    const { name, startDate, endDate } = req.body;
 
     // Create a new survey instance
     const surveyInstance = new SurveyInstance({
         survey: surveyID,
         account: accountID,
         name: name,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
         status: 'Created',
     });
     await surveyInstance.save();
@@ -218,6 +220,24 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
     });
 }));
 
+// Stop a survey instance
+router.post("/:surveyID/:surveyInstanceID/stopInstance", catchAsync(async (req, res) => {
+    const { surveyInstanceID, surveyID } = req.params;
+
+    try {
+        // Find the survey instance and update its status to "Stopped"
+        await SurveyInstance.findByIdAndUpdate(surveyInstanceID, { status: "Stopped" });
+
+        req.flash("success", "Survey instance has been stopped.");
+    } catch (error) {
+        console.error("Error stopping survey instance:", error);
+        req.flash("error", "Failed to stop survey instance.");
+    }
+
+    res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
+}));
+
+//Send Email
 router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID } = req.params;
 
@@ -269,6 +289,100 @@ router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(asyn
 
     req.flash('success', 'Emails sent successfully to all respondents!');
     res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
+}));
+
+// Send Reminder Emails to Incomplete Respondents
+router.post("/:surveyID/:surveyInstanceID/sendReminder", isLoggedIn, catchAsync(async (req, res) => {
+    const { surveyID, surveyInstanceID } = req.params;
+
+    // Fetch survey instance and populate respondents
+    const survey = await Survey.findById(surveyID);
+    const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate('respondents');
+
+    if (!survey || !surveyInstance) {
+        req.flash("error", "Survey or Survey Instance not found.");
+        return res.redirect(`/app/survey/${surveyID}`);
+    }
+
+    // Get only respondents who haven't completed the survey
+    const pendingRespondents = surveyInstance.respondents.filter(respondent => respondent.status === true);
+
+    if (pendingRespondents.length === 0) {
+        req.flash("error", "No pending respondents to remind.");
+        return res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
+    }
+
+    // Send reminder emails
+    for (const respondent of pendingRespondents) {
+        const takeSurveyLink = `${req.protocol}://${req.get("host")}/app/takeSurvey/${surveyID}/${surveyInstanceID}/${respondent._id}`;
+
+        const emailContent = `
+            Hello ${respondent.respondentName},
+
+            This is a friendly reminder to complete the survey "${survey.name}". Click the link below to take the survey:
+
+            ${takeSurveyLink}
+
+            Thank you!
+        `;
+
+        try {
+            await sendEmail({
+                to: respondent.respondentEmail,
+                subject: `Reminder: Complete your survey - ${survey.name}`,
+                text: emailContent,
+            });
+            console.log(`Reminder sent to: ${respondent.respondentEmail}`);
+        } catch (error) {
+            console.error(`Error sending reminder to ${respondent.respondentEmail}:`, error);
+        }
+    }
+
+    req.flash("success", "Reminders sent successfully to pending respondents!");
+    res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
+}));
+
+// Update Survey Instance Details
+router.post("/:surveyID/:surveyInstanceID/edit", catchAsync(async (req, res) => {
+    const { surveyID, surveyInstanceID } = req.params;
+    const { name, endDate } = req.body;
+
+    try {
+        // Find and update the survey instance
+        await SurveyInstance.findByIdAndUpdate(surveyInstanceID, {
+            name: name,
+            endDate: new Date(endDate),
+        });
+
+        req.flash("success", "Survey instance updated successfully.");
+    } catch (error) {
+        console.error("Error updating survey instance:", error);
+        req.flash("error", "Failed to update survey instance.");
+    }
+
+    res.redirect(`/app/survey/${surveyID}/list`);
+}));
+
+// Delete Survey Instance and Related Data
+router.delete("/:surveyID/:surveyInstanceID/delete", catchAsync(async (req, res) => {
+    const { surveyID, surveyInstanceID } = req.params;
+
+    try {
+        // Delete all responses linked to this survey instance
+        await Response.deleteMany({ surveyInstance: surveyInstanceID });
+
+        // Delete all respondents linked to this survey instance
+        await Respondent.deleteMany({ surveyInstance: surveyInstanceID });
+
+        // Delete the survey instance itself
+        await SurveyInstance.findByIdAndDelete(surveyInstanceID);
+
+        req.flash("success", "Survey instance deleted successfully.");
+        res.redirect(`/app/survey/${surveyID}/list`)
+    } catch (error) {
+        console.error("Error deleting survey instance:", error);
+        res.status(500).json({ success: false, message: "Failed to delete survey instance." });
+    }
 }));
 
 module.exports = router;

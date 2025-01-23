@@ -1,5 +1,5 @@
-const mongoose              = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/pricePelican');
+const mongoose = require("../db"); // Use centralized DB connection
+
 
 const SurveyInstanceSchema = new mongoose.Schema({
     survey: {
@@ -16,6 +16,14 @@ const SurveyInstanceSchema = new mongoose.Schema({
         ref:'Respondent',
     }],
     status: String,
+    startDate: {
+        type: Date,
+        required: true,
+    },
+    endDate: {
+        type: Date,
+        required: true,
+    }
 });
 
 const SurveyInstance = mongoose.model('SurveyInstance', SurveyInstanceSchema);
