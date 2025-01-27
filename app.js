@@ -52,13 +52,16 @@ app.use(async (req, res, next) => {
 });
 
 //Importing routes
-const surveyRoute     = require('./routes/survey');
+
 const authRoute       = require('./routes/auth');
 const accountRoute    = require('./routes/account');
-const takeSurveyRoute = require('./routes/takeSurvey');
 const articleRoute    = require('./routes/article');
 const adminRoute      = require('./routes/admin');
 const thoughtRoute    = require('./routes/thoughts');
+
+const takeSurveyRoute = require('./routes/takeSurvey');
+const surveyRoute     = require('./routes/survey');
+const accountAdminRoute = require('./routes/accountAdmin');
 
 app.get('/', (req, res) => {
     res.render('./gen/index');
@@ -74,13 +77,17 @@ app.get('/insights', catchAsync(async(req, res) => {
 }));
 
 
-app.use('/app/survey', surveyRoute);
+
+
 app.use('/auth', authRoute);
 app.use('/account', accountRoute);
-app.use('/app/takeSurvey', takeSurveyRoute);
 app.use('/admin', adminRoute);
 app.use('/admin/article', articleRoute);
 app.use('/thoughts', thoughtRoute);
+
+app.use('/app/survey', surveyRoute);
+app.use('/app/takeSurvey', takeSurveyRoute);
+app.use('/app/accountAdmin', accountAdminRoute)
 
 app.listen(3000, () => {
     console.log('-----------------------------------------------------------')

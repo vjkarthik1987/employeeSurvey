@@ -1,11 +1,12 @@
 <% layout('./layouts/boilerplate') -%>
 <body>
+    
+    <%- include('../partials/navbar') %>
     <% if(success && success.length) { %>
         <%- include('../partials/success') %>
     <% } else if (error && error.length) { %>
         <%- include('../partials/error') %>
     <% } %>
-    <%- include('../partials/navbar') %>
     <div class="container">
         <%- include('../partials/auth/login') %>
     </div>

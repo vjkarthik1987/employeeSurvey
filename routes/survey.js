@@ -377,12 +377,15 @@ router.delete("/:surveyID/:surveyInstanceID/delete", catchAsync(async (req, res)
         // Delete the survey instance itself
         await SurveyInstance.findByIdAndDelete(surveyInstanceID);
 
-        req.flash("success", "Survey instance deleted successfully.");
-        res.redirect(`/app/survey/${surveyID}/list`)
+        console.log(`Survey Instance ${surveyInstanceID} deleted successfully.`);
+        
+        // Send a JSON response instead of redirect
+        res.status(200).json({ success: true, message: "Survey instance deleted successfully." });
     } catch (error) {
         console.error("Error deleting survey instance:", error);
         res.status(500).json({ success: false, message: "Failed to delete survey instance." });
     }
 }));
+
 
 module.exports = router;

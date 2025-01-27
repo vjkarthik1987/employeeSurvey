@@ -15,7 +15,10 @@ const SurveyInstanceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:'Respondent',
     }],
-    status: String,
+    status: {
+        type:String,
+        enum: ['Created', 'progress', 'Stopped'],
+    },
     startDate: {
         type: Date,
         required: true,

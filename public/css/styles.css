@@ -213,6 +213,11 @@ form h1{
     border: 1px solid #ff4429;
 }
 
+.nav-item{
+    padding-top: 5px;
+    text-transform: uppercase;
+}
+
 /* Media query for tablets and smaller devices */
 @media (max-width: 768px) {
     .sidebar {

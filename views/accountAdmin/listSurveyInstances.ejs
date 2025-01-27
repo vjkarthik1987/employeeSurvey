@@ -1,0 +1,59 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+        <% if(success && success.length) { %>
+            <%- include('../partials/success') %>
+        <% } else if (error && error.length) { %>
+            <%- include('../partials/error') %>
+        <% } %>
+
+        <h1>Survey Instances</h1>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Survey Instance Name</th>
+                    <th>Survey Name</th>
+                    <th>Number of Respondents</th>
+                    <th>Number of People Who Responded</th> <!-- New Column -->
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (surveyInstances && surveyInstances.length > 0) { %>
+                    <% surveyInstances.forEach((instance, index) => { %>
+                        <%= console.log() %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><a href="/app/survey/<%= instance.survey._id.toString() %>/<%= instance._id %>"><%= instance.name %></a></td>
+                            <td><%= instance.survey ? instance.survey.name : 'N/A' %></td>
+                            <td><%= instance.respondents ? instance.respondents.length : 0 %></td>
+                            <td><%= instance.completedResponses || 0 %></td> <!-- New Column -->
+                            <td>
+                                <% if (instance.status === 'Created') { %>
+                                    <span class="badge bg-warning">Created</span>
+                                <% } else if (instance.status === 'In Progress') { %>
+                                    <span class="badge bg-success">In Progress</span>
+                                <% } else if (instance.status === 'Completed') { %>
+                                    <span class="badge bg-primary">Completed</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">Stopped</span>
+                                <% } %>
+                            </td>
+                            <td><%= instance.startDate.toDateString() %></td>
+                            <td><%= instance.endDate.toDateString() %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="8" class="text-center">No survey instances found.</td>
+                    </tr>
+                <% } %>
+            </tbody>            
+        </table>
+    </div>
+</body>
