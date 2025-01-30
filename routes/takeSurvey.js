@@ -50,48 +50,41 @@ router.get('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async(req, r
 // Submit survey responses and mark respondent as "completed"
 router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID, respondentID } = req.params;
-    const { responses, strengthsFeedback, improvementsFeedback } = req.body;  // Responses contain question IDs as keys and choices as values
+    const { responses, strengthsFeedback, improvementsFeedback } = req.body; // responses is an object with question IDs as keys and choices as values
 
-    try {
-        // Verify that the survey instance and respondent exist
-        const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
-        const respondent = await Respondent.findById(respondentID);
+    // Verify that the survey, surveyInstance, and respondent exist
+    const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
+    const respondent = await Respondent.findById(respondentID);
 
-        if (!surveyInstance || !respondent) {
-            req.flash('error', 'Invalid survey or respondent information.');
-            return res.redirect('/');
-        }
-
-        // Save responses
-        const responseDocs = [];
-        for (const [questionId, choice] of Object.entries(responses)) {
-            const response = new Response({
-                question: questionId,
-                choice: Number(choice),
-                surveyInstance: surveyInstanceID,
-                respondent: respondentID
-            });
-            await response.save();
-            responseDocs.push(response._id); // Store response IDs
-        }
-
-        // Update respondent with saved responses and completion status
-        respondent.responses.push(...responseDocs);
-        respondent.status = false; // Set the respondent's status to false
-        await Respondent.findByIdAndUpdate(respondentID, {
-            strengthsFeedback,
-            improvementsFeedback,
-            progress: "completed"
-        });
-
-        // Redirect to home with success message
-        req.flash('success', 'Survey responses saved successfully!');
-        res.redirect('/');
-    } catch (error) {
-        console.error("Error submitting survey:", error);
-        req.flash('error', 'Failed to submit survey.');
-        res.redirect('/');
+    if (!surveyInstance || !respondent) {
+        req.flash('error', 'Invalid survey or respondent information.');
+        return res.redirect('/');
     }
+
+    // Loop through responses, create and save Response documents
+    const responseDocs = [];
+    for (const [questionId, choice] of Object.entries(responses)) {
+        const response = new Response({
+            question: questionId,
+            choice: Number(choice),
+            surveyInstance: surveyInstanceID,
+            respondent: respondentID
+        });
+        await response.save();
+        responseDocs.push(response._id); // Store response IDs to add to the respondent
+    }
+
+    // Update the Respondent document with the new responses
+    respondent.responses.push(...responseDocs);
+    respondent.status = false; // Set the respondent's status to false
+    respondent.progress = "completed"; //Set the progress status to completed
+    respondent.strengthsFeedback = strengthsFeedback; //Save the strengths feedback
+    respondent.improvementsFeedback = improvementsFeedback; //Save the improvements feedback
+    await respondent.save();
+
+    // Redirect to home with success message
+    req.flash('success', 'Survey responses saved successfully!');
+    res.redirect('/');
 }));
 
 

@@ -1,13 +1,14 @@
 <% layout('./layouts/boilerplate') -%>
 <body>
     <%- include('../partials/sidebar') %>
-    <% if(success && success.length) { %>
-        <%- include('../partials/success') %>
-    <% } else if (error && error.length) { %>
-        <%- include('../partials/error') %>
-    <% } %>
+    
 
     <div class="main-content">
+        <% if(success && success.length) { %>
+            <%- include('../partials/success') %>
+        <% } else if (error && error.length) { %>
+            <%- include('../partials/error') %>
+        <% } %>
         <a href="/app/survey/home">Home</a><b> ></b>
         <a href="/app/survey/<%= survey._id %>/list">Survey: <%= survey.name %></a><b> ></b>
         <%= surveyInstance.name %>
