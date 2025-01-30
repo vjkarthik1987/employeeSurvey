@@ -47,61 +47,75 @@ router.get('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async(req, r
     });
 }));
 
+// Submit survey responses and mark respondent as "completed"
 router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID, respondentID } = req.params;
-    const { responses } = req.body; // responses is an object with question IDs as keys and choices as values
+    const { responses, strengthsFeedback, improvementsFeedback } = req.body;  // Responses contain question IDs as keys and choices as values
 
-    // Verify that the survey, surveyInstance, and respondent exist
-    const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
-    const respondent = await Respondent.findById(respondentID);
+    try {
+        // Verify that the survey instance and respondent exist
+        const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
+        const respondent = await Respondent.findById(respondentID);
 
-    if (!surveyInstance || !respondent) {
-        req.flash('error', 'Invalid survey or respondent information.');
-        return res.redirect('/');
-    }
+        if (!surveyInstance || !respondent) {
+            req.flash('error', 'Invalid survey or respondent information.');
+            return res.redirect('/');
+        }
 
-    // Loop through responses, create and save Response documents
-    const responseDocs = [];
-    for (const [questionId, choice] of Object.entries(responses)) {
-        const response = new Response({
-            question: questionId,
-            choice: Number(choice),
-            surveyInstance: surveyInstanceID,
-            respondent: respondentID
+        // Save responses
+        const responseDocs = [];
+        for (const [questionId, choice] of Object.entries(responses)) {
+            const response = new Response({
+                question: questionId,
+                choice: Number(choice),
+                surveyInstance: surveyInstanceID,
+                respondent: respondentID
+            });
+            await response.save();
+            responseDocs.push(response._id); // Store response IDs
+        }
+
+        // Update respondent with saved responses and completion status
+        respondent.responses.push(...responseDocs);
+        respondent.status = false; // Set the respondent's status to false
+        await Respondent.findByIdAndUpdate(respondentID, {
+            strengthsFeedback,
+            improvementsFeedback,
+            progress: "completed"
         });
-        await response.save();
-        responseDocs.push(response._id); // Store response IDs to add to the respondent
+
+        // Redirect to home with success message
+        req.flash('success', 'Survey responses saved successfully!');
+        res.redirect('/');
+    } catch (error) {
+        console.error("Error submitting survey:", error);
+        req.flash('error', 'Failed to submit survey.');
+        res.redirect('/');
     }
-
-    // Update the Respondent document with the new responses
-    respondent.responses.push(...responseDocs);
-    respondent.status = false; // Set the respondent's status to false
-    respondent.progress = "completed"; //Set the progress status to completed
-    await respondent.save();
-
-    // Redirect to home with success message
-    req.flash('success', 'Survey responses saved successfully!');
-    res.redirect('/');
 }));
 
-// Save progress endpoint
-router.post("/:surveyID/:surveyInstanceID/:respondentID/save", upload.none(), catchAsync(async (req, res) => {
+
+// Save progress without completing the survey
+router.post("/:surveyID/:surveyInstanceID/:respondentID/save", catchAsync(async (req, res) => {
+    console.log("🔵 Save Progress Route Hit: /:surveyID/:surveyInstanceID/:respondentID/save");
+    console.log("Received Request Body:", req.body);
+
     const { surveyID, surveyInstanceID, respondentID } = req.params;
-    const responses = req.body.responses; // Extract responses from form data
+    const { responses, strengthsFeedback, improvementsFeedback } = req.body; // Extract text-based responses
 
     try {
         // Validate that responses exist
         if (!responses || Object.keys(responses).length === 0) {
             return res.status(400).json({ success: false, message: "No responses received." });
         }
-
+        
         // Find the respondent
         const respondent = await Respondent.findById(respondentID);
         if (!respondent) {
             return res.status(404).json({ success: false, message: "Respondent not found." });
         }
 
-        // Loop through responses and save each
+        // Save responses
         for (const [questionId, choice] of Object.entries(responses)) {
             let response = await Response.findOne({
                 question: questionId,
@@ -122,9 +136,12 @@ router.post("/:surveyID/:surveyInstanceID/:respondentID/save", upload.none(), ca
             await response.save();
         }
 
-        // Update respondent progress to "saved"
-        respondent.progress = "saved";
-        await respondent.save();
+        // Save text-based responses
+        await Respondent.findByIdAndUpdate(respondentID, {
+            strengthsFeedback,
+            improvementsFeedback,
+            progress: "saved"
+        });
 
         res.json({ success: true, message: "Progress saved successfully!" });
     } catch (error) {

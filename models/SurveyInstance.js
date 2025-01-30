@@ -17,7 +17,7 @@ const SurveyInstanceSchema = new mongoose.Schema({
     }],
     status: {
         type:String,
-        enum: ['Created', 'progress', 'Stopped'],
+        enum: ['Created', 'In Progress', 'MailSent','Stopped'],
     },
     startDate: {
         type: Date,

@@ -17,7 +17,9 @@ const RespondentSchema = new mongoose.Schema({
     progress:{
         type: String,
         enum: ['new','saved','completed']
-    }
+    },
+    strengthsFeedback: String,
+    improvementsFeedback: String, 
 });
 
 const Respondent = mongoose.model('Respondent', RespondentSchema);

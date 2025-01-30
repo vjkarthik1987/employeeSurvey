@@ -10,6 +10,7 @@ const router           = express.Router();
 const passport         = require('passport');
 const SurveyInstance   = require('../models/SurveyInstance');
 const Respondent       = require('../models/Respondent');
+const Response         = require('../models/Response');
 const Account          = require("../models/Account");
 const catchAsync       = require('../utils/catchAsync');
 const isLoggedIn       = require('../middlewares/isLoggedIn');
@@ -17,6 +18,27 @@ const isLoggedIn       = require('../middlewares/isLoggedIn');
 router.get('/home', isLoggedIn, catchAsync(async(req, res) => {
     res.render('./accountAdmin/home');
 }));
+
+// router.get('/surveyInstances', isLoggedIn, catchAsync(async(req, res) => {
+//     const accountId = req.user._id; // Get logged-in admin's account ID
+
+//     // Fetch all survey instances created by this admin
+//     const surveyInstances = await SurveyInstance.find({ account: accountId })
+//         .populate('survey', 'name') // Get survey name
+//         .populate('respondents') // Get all respondents linked to the survey
+//         .select('survey name status startDate endDate respondents') // Fetch only required fields
+//         .lean(); // Convert to plain JavaScript objects for easier manipulation
+
+//     // Count completed responses per survey instance
+//     for (let instance of surveyInstances) {
+//         instance.completedResponses = await Respondent.countDocuments({
+//             surveyInstance: instance._id,
+//             progress: 'completed' // Only count respondents who completed the survey
+//         });
+//     }
+
+//     res.render('./accountAdmin/listSurveyInstances', { surveyInstances });
+// }));
 
 router.get('/surveyInstances', isLoggedIn, catchAsync(async(req, res) => {
     const accountId = req.user._id; // Get logged-in admin's account ID
@@ -27,18 +49,35 @@ router.get('/surveyInstances', isLoggedIn, catchAsync(async(req, res) => {
         .populate('respondents') // Get all respondents linked to the survey
         .select('survey name status startDate endDate respondents') // Fetch only required fields
         .lean(); // Convert to plain JavaScript objects for easier manipulation
-
-    // Count completed responses per survey instance
-    for (let instance of surveyInstances) {
-        instance.completedResponses = await Respondent.countDocuments({
-            surveyInstance: instance._id,
-            progress: 'completed' // Only count respondents who completed the survey
-        });
+    
+    for (surveyInstance of surveyInstances){
+        if (surveyInstance.status == "Stopped") {
+            if (surveyInstance.respondents.filter(r => r.progress === 'completed').length) {
+                totalScore = 0;
+                responses = 0;
+                for (respondent of surveyInstance.respondents){
+                    for (response of respondent.responses) {
+                        const resp = await Response.findById(response);
+                        const score = resp.choice;
+                        totalScore += score;
+                        responses ++;
+                    }
+                }
+                surveyInstance.overallScore = totalScore/responses;
+            }
+            else {
+                surveyInstance.overallScore = "NaN"
+            }
+        }
+        else {
+            surveyInstance.overallScore = "Not Finished";
+        }
     }
+
+    
 
     res.render('./accountAdmin/listSurveyInstances', { surveyInstances });
 }));
-
 
 router.post("/changePassword", isLoggedIn, async (req, res) => {
     try {

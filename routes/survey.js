@@ -76,7 +76,7 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                             ...respondentData,
                             surveyInstance: surveyInstance._id,
                             status: true,
-                            progress: 'new' // Set progress status to 'new'
+                            progress: 'new',
                         });
                         await respondent.save();
                         return respondent._id;

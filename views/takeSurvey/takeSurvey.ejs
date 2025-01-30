@@ -43,6 +43,16 @@
                     <% } %>
                 </div>
             <% } %>
+            <div class="form-group">
+                <label for="strengthsFeedback" class="form-label">What are the good things about <%= survey.name %>?</label>
+                <textarea id="strengths" name="strengthsFeedback" rows="3" placeholder="Describe the strengths of this area..." class="form-control"></textarea>
+            </div>
+        
+            <div class="form-group">
+                <label for="improvements" class="form-label">What can be improved about <%= survey.name %>?</label>
+                <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="3" placeholder="Describe areas that need improvement..."></textarea>
+            </div>
+
             <button type="submit" class="mb-5">Complete</button>
             <button type="button" id="saveProgress" class="mb-5">Save Progress</button>
         </form>
