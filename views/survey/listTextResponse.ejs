@@ -1,0 +1,37 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+        <% if(success && success.length) { %>
+            <%- include('../partials/success') %>
+        <% } else if (error && error.length) { %>
+            <%- include('../partials/error') %>
+        <% } %>
+
+        <h1>Responses</h1>
+
+        <h2>Summary of Responses</h2>
+        <p><b>Summary of Strengths:</b> <%= strengthsSummary || "No feedback available." %></p>
+        <p><b>Summary of Areas for Improvement:</b> <%= improvementsSummary || "No feedback available." %></p>
+
+        <h2 class="fs-3">Detailed Responses</h2>
+
+        <h3 class="fs-4">Strengths in this area</h3>
+        <% if (strengths.length > 0) { %>
+            <% strengths.forEach(strength => { %>
+                <p><%= strength %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No strengths feedback available.</p>
+        <% } %>
+
+        <h3>Areas to focus upon</h3>
+        <% if (improvements.length > 0) { %>
+            <% improvements.forEach(improvement => { %>
+                <p><%= improvement %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No improvement feedback available.</p>
+        <% } %>
+    </div>
+</body>

@@ -14,7 +14,8 @@ const Response         = require('../models/Response');
 const Account          = require('../models/Account');
 const catchAsync       = require('../utils/catchAsync');
 const sendEmail        = require('../utils/sendEmail');
-const { isArray } = require('util');
+const summarizeText    = require("../utils/summarizer");
+const { isArray }      = require('util');
 
 router.get('/home', isLoggedIn, catchAsync(async(req, res) => {
     const surveys = await Survey.find();
@@ -219,6 +220,50 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
         detailedScores,
     });
 }));
+
+//Get details of text responses
+router.get('/:surveyID/:surveyInstanceID/textResponses', isLoggedIn, catchAsync(async (req, res) => {
+    try {
+        const { surveyID, surveyInstanceID } = req.params;
+
+        // Fetch survey and survey instance
+        const survey = await Survey.findById(surveyID);
+        const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
+
+        if (!survey || !surveyInstance) {
+            req.flash("error", "Survey or Survey Instance not found.");
+            return res.redirect('/');
+        }
+
+        // Get all respondents who have completed the survey
+        const respondents = await Respondent.find({
+            surveyInstance: surveyInstanceID, // Ensure it's an ObjectId
+            progress: "completed"
+        }).select("strengthsFeedback improvementsFeedback");
+
+        // Initialize arrays
+        const strengths = [];
+        const improvements = [];
+
+        // Extract strengths and improvements
+        respondents.forEach(respondent => {
+            if (respondent.strengthsFeedback) strengths.push(respondent.strengthsFeedback);
+            if (respondent.improvementsFeedback) improvements.push(respondent.improvementsFeedback);
+        });
+
+        // Generate summaries
+        const strengthsSummary = await summarizeText(strengths.join(". "));
+        const improvementsSummary = await summarizeText(improvements.join(". "));
+
+        res.render('./survey/listTextResponse', { strengths, improvements, strengthsSummary, improvementsSummary, survey, surveyInstance });
+
+    } catch (error) {
+        console.error("❌ Error getting details of text responses:", error);
+        req.flash("error", "Failed to fetch text responses.");
+        res.redirect('/app/survey/home');
+    }
+}));
+
 
 // Stop a survey instance
 router.post("/:surveyID/:surveyInstanceID/stopInstance", catchAsync(async (req, res) => {

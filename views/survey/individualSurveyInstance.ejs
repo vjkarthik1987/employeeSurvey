@@ -48,6 +48,7 @@
 
         <div id="result">
             <% if(surveyInstance.status === "Stopped") { %>
+                <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses"><p>Text Responses</p></a>
                 <% if (overallAverageScore !== null) { %>
                     <div id="details">
                         <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
