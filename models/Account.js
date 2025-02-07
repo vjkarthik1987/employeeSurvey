@@ -37,6 +37,7 @@ const AccountSchema = new mongoose.Schema({
         required: true,
     }
 });
+
 // Add passport-local-mongoose plugin
 AccountSchema.plugin(passportLocalMongoose, {
     usernameField: 'email' // Use email as the username field

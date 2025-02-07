@@ -113,6 +113,31 @@ h4 {
     font-size: 2em;
 }
 
+.cardHolder {
+    border: 1px solid lightgray;
+    min-height: 200px;
+}
+
+.pillLink {
+    background-color: darkorchid;
+    padding: 3px 5px;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    margin-right: 5px;
+    margin-bottom: 10px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* Font */
+.pacifico-regular {
+    font-family: "Pacifico", serif;
+    font-weight: 400;
+    font-style: normal;
+    color: #ff4429;
+}
+
 /* IDs */
 
 #hero {

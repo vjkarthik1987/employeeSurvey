@@ -5,6 +5,8 @@ const fs               = require('fs');
 const upload           = multer({ dest: 'uploads/' });
 const router           = express.Router();
 const mongoose         = require('mongoose');
+const puppeteer        = require("puppeteer");
+const ejs              = require("ejs");
 const isLoggedIn       = require('../middlewares/isLoggedIn')
 const Survey           = require('../models/Survey');
 const Question         = require('../models/Question');
@@ -17,9 +19,18 @@ const sendEmail        = require('../utils/sendEmail');
 const summarizeText    = require("../utils/summarizer");
 const { isArray }      = require('util');
 
-router.get('/home', isLoggedIn, catchAsync(async(req, res) => {
+router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
     const surveys = await Survey.find();
-    res.render('./survey/home', {surveys});
+    const user = req.user;
+
+    // Fetch the 5 most recent survey instances linked to the user's account
+    const recentSurveyInstances = await SurveyInstance.find({ account: user._id })
+        .populate('survey', 'name') // Populate survey details (only name)
+        .sort({ startDate: -1 }) // Sort by most recent first
+        .limit(5) // Get only the last 5 instances
+        .lean();
+
+    res.render('./survey/home', { surveys, user, recentSurveyInstances });
 }));
 
 router.get('/:surveyID', isLoggedIn, catchAsync(async(req, res) => {
@@ -212,6 +223,12 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
         }
     }
 
+    req.session.surveyResults = {
+        overallAverageScore,
+        categoryAverages,
+        detailedScores
+    };
+
     res.render('./survey/individualSurveyInstance', {
         survey,
         surveyInstance,
@@ -278,7 +295,6 @@ router.post("/:surveyID/:surveyInstanceID/stopInstance", catchAsync(async (req, 
         console.error("Error stopping survey instance:", error);
         req.flash("error", "Failed to stop survey instance.");
     }
-
     res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
 }));
 

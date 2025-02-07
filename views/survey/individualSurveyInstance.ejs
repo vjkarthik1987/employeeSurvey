@@ -90,7 +90,11 @@
                                     <li>
                                         <strong><%= score.shortDescription %>:</strong> 
                                     </li>
-                                    <%= score.actionPlan || 'No action plan available' %>
+                                    <% if (score.score < 5) { %>
+                                        <%= score.actionPlan || 'No action plan available' %>
+                                    <% } else { %>
+                                        <%= 'Keep up the good work' %>
+                                    <% } %>      
                                 <% }) %>
                             </ul>
                         <% } %>

@@ -1,6 +1,5 @@
 <% layout('./layouts/boilerplate') -%>
-<body>
-    
+<body>  
     <%- include('../partials/sidebar') %>
     <div class="main-content">
         <% if(success && success.length) { %>
@@ -8,10 +7,61 @@
         <% } else if (error && error.length) { %>
             <%- include('../partials/error') %>
         <% } %>
-        <h1>Survey Home</h1>
-        <% for (survey of surveys) { %>
-            <p><a href="/app/survey/<%= survey._id %>"><%= survey.name %></a></p>
-        <% } %> 
+        <h1 class="fs-6 text-uppercase fw-bold">Home</h1>
+        <p class="fs-6 mb-1"><b>Welcome <%= user.name[0].toUpperCase() + user.name.substring(1) %></b></p>
+        <p class="mb-3"><i><%= user.email %></i></p>
+
+        <!-- Div depicting quick links -->
+        <div id="quickLinks" class="mb-4">
+            <a href="#surveys" class="pillLink">Surveys</a>
+            <a href="#recentSurveys" class="pillLink">Your Recent Surveys</a>
+            <a href="#quickSummary" class="pillLink">Quick Summary</a>
+        </div>
+        
+        <!-- Div depicting all surveys -->
+        <div id="surveys" class="mb-4">
+            <h2 class="fs-4">Surveys</h2>
+            <div class="row mx-0">
+                <% for (survey of surveys) { %>
+                    <div class="col col-12 col-md-6 col-lg-3 mx-0 px-0">
+                        <div class="cardHolder me-2 mb-2 p-2 d-flex flex-column justify-content-between">
+                            <p class="fw-bold"><%= survey.name %></p>
+                            <p><%= survey.description %></p>
+                            <div>
+                                <a href="/app/survey/<%= survey._id %>" class="btn btn-sm btn-primary py-0">Start</a>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <!-- Div depicting recent surveys -->
+        <div id="recentSurveys" class="mb-4">
+            <h2 class="fs-4">Recent Survey Instances</h2>
+            <% if (recentSurveyInstances.length > 0) { %>
+                <div class="row mx-0">
+                    <% for (instance of recentSurveyInstances) { %>
+                        <div class="col col-12 col-md-6 col-lg-3 mx-0 px-0">
+                            <div class="cardHolder me-2 mb-2 p-2 d-flex flex-column justify-content-between">
+                                <p class="fw-bold fs-6"><%= instance.survey.name %> </p>
+                                <p class="mb-0"><i><%= instance.name %> </i></p>
+                                <div class="mb-2">
+                                    <span class="badge text-bg-secondary"><%= instance.status %></span>
+                                </div>
+                                <div>
+                                    <a href="/app/survey/<%= instance.survey._id %>/<%= instance._id %>" class="btn btn-sm btn-primary d-inline">See Details</a>
+                                </div>
+                            </div>                         
+                        </div>
+                    <% } %>
+                </div>
+            <% } else { %>
+                <p>You haven't taken any surveys yet.</p>
+            <% } %>            
+        </div>
+
+        <!-- Div depicting a quick summary -->
     </div>
-    
+    <%- include('../partials/footer') %>
 </body>
