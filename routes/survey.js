@@ -22,6 +22,9 @@ const { isArray }      = require('util');
 router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
     const surveys = await Survey.find();
     const user = req.user;
+    const account = await Account.findById(user).populate({
+        path:'surveyInstances',
+    }).lean();
 
     // Fetch the 5 most recent survey instances linked to the user's account
     const recentSurveyInstances = await SurveyInstance.find({ account: user._id })
@@ -29,8 +32,16 @@ router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
         .sort({ startDate: -1 }) // Sort by most recent first
         .limit(5) // Get only the last 5 instances
         .lean();
+    
+    let respondents = 0;
+    let stoppedInstances = 0;
+    let activeInstances = 0;
+    for (instance of account.surveyInstances) {
+        respondents = respondents + instance.respondents.length;
+        (instance.status == 'Stopped') ? (stoppedInstances++) : (activeInstances++);
+    }
 
-    res.render('./survey/home', { surveys, user, recentSurveyInstances });
+    res.render('./survey/home', { surveys, user, recentSurveyInstances, account, respondents, stoppedInstances, activeInstances });
 }));
 
 router.get('/:surveyID', isLoggedIn, catchAsync(async(req, res) => {
