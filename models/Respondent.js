@@ -9,6 +9,11 @@ const RespondentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:'SurveyInstance',
     },
+    field1: String,
+    field2: String,
+    field3: String,
+    field4: String,
+    field5: String,
     responses:[{
         type: mongoose.Schema.Types.ObjectId,
         ref:'Response',
@@ -19,7 +24,10 @@ const RespondentSchema = new mongoose.Schema({
         enum: ['new','saved','completed']
     },
     strengthsFeedback: String,
-    improvementsFeedback: String, 
+    improvementsFeedback: String,
+    continueFeedback: String,
+    detailedFeedback1: String,
+    detailedFeedback2: String 
 });
 
 const Respondent = mongoose.model('Respondent', RespondentSchema);

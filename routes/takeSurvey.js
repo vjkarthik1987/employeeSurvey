@@ -83,15 +83,13 @@ router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req,
     await respondent.save();
 
     // Redirect to home with success message
-    req.flash('success', 'Survey responses saved successfully!');
+    req.flash('success', 'Thank you for your time and patience. Your responses have been successfully. The results will be shared by your administrator. In the meantime, please go through our website and get further insights on pricing.');
     res.redirect('/');
 }));
 
 
 // Save progress without completing the survey
 router.post("/:surveyID/:surveyInstanceID/:respondentID/save", catchAsync(async (req, res) => {
-    console.log("🔵 Save Progress Route Hit: /:surveyID/:surveyInstanceID/:respondentID/save");
-    console.log("Received Request Body:", req.body);
 
     const { surveyID, surveyInstanceID, respondentID } = req.params;
     const { responses, strengthsFeedback, improvementsFeedback } = req.body; // Extract text-based responses

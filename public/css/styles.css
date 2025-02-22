@@ -130,6 +130,23 @@ h4 {
     white-space: nowrap;
 }
 
+.routeHeader {
+    text-transform: uppercase;
+    font-weight: 800;
+    display: inline;
+    font-size: small;
+}
+
+.largeButton {
+    height: 170px;
+    width: 170px;
+    color: #d93b21;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d93b21;
+}
+
 /* Font */
 .pacifico-regular {
     font-family: "Pacifico", serif;

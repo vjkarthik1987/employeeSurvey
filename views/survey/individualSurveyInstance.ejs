@@ -22,8 +22,10 @@
         <% } %>
 
         <% if (surveyInstance.status === 'Created') { %>
-            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" style="display:inline;">Send Email</a>
+            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" style="display:inline;" class="btn btn-sm btn-primary">Send Email</a>
+            <button id="markAsSent" class="btn btn-sm btn-secondary">I Have Sent Email Directly</button>
         <% } %>
+
 
         <% if (surveyInstance.status !== 'Stopped' && surveyInstance.status !== 'Created') { %>
             <form id="sendReminderForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendReminder" method="post" style="display:inline;">
@@ -117,5 +119,25 @@
                 alert("Survey instance was not stopped.");
             }
         }
+
+        document.getElementById("markAsSent").addEventListener("click", function() {
+            fetch("/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/markAsSent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Survey status updated to 'MailSent'.");
+                    location.reload(); // Refresh page to reflect the change
+                } else {
+                    alert("Failed to update survey status.");
+                }
+            })
+            .catch(error => {
+                alert("An error occurred.");
+                console.error(error);
+            });
+        });
     </script>
 </body>

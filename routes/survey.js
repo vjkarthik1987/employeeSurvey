@@ -2,11 +2,14 @@ const express          = require('express');
 const multer           = require('multer');
 const csvParser        = require('csv-parser');
 const fs               = require('fs');
+const path             = require('path');
 const upload           = multer({ dest: 'uploads/' });
 const router           = express.Router();
 const mongoose         = require('mongoose');
 const puppeteer        = require("puppeteer");
 const ejs              = require("ejs");
+const createCsvWriter  = require('csv-writer').createObjectCsvWriter;
+const os               = require('os');
 const isLoggedIn       = require('../middlewares/isLoggedIn')
 const Survey           = require('../models/Survey');
 const Question         = require('../models/Question');
@@ -46,7 +49,12 @@ router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
 
 router.get('/:surveyID', isLoggedIn, catchAsync(async(req, res) => {
     const survey = await Survey.findById(req.params.surveyID);
-    res.render('./survey/individualSurvey', {survey});
+    const accountID = req.user._id;
+    const surveyInstances = await SurveyInstance.find({
+        survey: survey,
+        account: accountID,
+    });
+    res.render('./survey/individualSurvey', {survey, accountID, surveyInstances});
 }));
 
 router.get('/:surveyID/surveyInstance', isLoggedIn, catchAsync(async (req, res) => {
@@ -63,7 +71,7 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
     const surveyInstance = new SurveyInstance({
         survey: surveyID,
         account: accountID,
-        name: name,
+        name,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         status: 'Created',
@@ -76,23 +84,21 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
     fs.createReadStream(filePath, { encoding: 'utf8' })
         .pipe(csvParser())
         .on('data', (row) => {
-            // Clean and trim keys and values from the row
             const cleanedRow = Object.fromEntries(
                 Object.entries(row).map(([key, value]) => [key.trim().replace(/^\uFEFF/, ''), value.trim()])
             );
             console.log('Cleaned Row:', cleanedRow);
 
-            const { respondentName, respondentEmail } = cleanedRow;
-
+            const { respondentName, respondentEmail, field1, field2, field3, field4, field5 } = cleanedRow;
             if (respondentName && respondentEmail) {
-                respondents.push({ respondentName, respondentEmail });
+                respondents.push({ respondentName, respondentEmail, field1, field2, field3, field4, field5 });
             }
         })
         .on('end', async () => {
-            fs.unlinkSync(filePath); // Delete the uploaded CSV file after processing
+            fs.unlinkSync(filePath); // Delete uploaded CSV file
 
             try {
-                // Save all respondents in parallel
+                // Save respondents and generate survey links
                 const savedRespondents = await Promise.all(
                     respondents.map(async (respondentData) => {
                         const respondent = new Respondent({
@@ -102,32 +108,93 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                             progress: 'new',
                         });
                         await respondent.save();
-                        return respondent._id;
+                        return {
+                            _id: respondent._id,
+                            respondentName: respondent.respondentName,
+                            respondentEmail: respondent.respondentEmail,
+                            surveyLink: `${req.protocol}://${req.get('host')}/app/takeSurvey/${surveyID}/${surveyInstance._id}/${respondent._id}`
+                        };
                     })
                 );
 
-                // Add all respondent IDs to the survey instance
-                surveyInstance.respondents.push(...savedRespondents);
+                surveyInstance.respondents.push(...savedRespondents.map(r => r._id));
                 await surveyInstance.save();
 
                 // Update account with the new survey instance
-                await Account.findByIdAndUpdate(accountID, {
-                    $push: { surveyInstances: surveyInstance._id },
+                await Account.findByIdAndUpdate(accountID, { $push: { surveyInstances: surveyInstance._id } });
+
+                // ✅ Generate CSV file for download
+                 // ✅ Detect User's Downloads or Documents Folder
+                 const downloadsDir = path.join(os.homedir(), 'Downloads');  // Preferred location
+                 const documentsDir = path.join(os.homedir(), 'Documents');  // Alternative
+
+                // Ensure at least one exists
+                const saveDir = fs.existsSync(downloadsDir) ? downloadsDir : documentsDir;
+                // ✅ Generate CSV file in user's folder
+                const csvFilePath = path.join(saveDir, `Respondents-${surveyInstance._id}.csv`);
+                const csvWriter = createCsvWriter({
+                    path: csvFilePath,
+                    header: [
+                        { id: 'respondentName', title: 'Name' },
+                        { id: 'respondentEmail', title: 'Email' },
+                        { id: 'surveyLink', title: 'Survey Link' },
+                        { id: '_id', title: 'ID'},
+                    ]
                 });
 
-                req.flash('success', 'Survey instance and respondents added successfully!');
+                await csvWriter.writeRecords(savedRespondents);
+                req.flash('success', 'Survey instance and respondents added successfully! The CSV is saved in your downloads directory or your documents folder.');
+
+                //res.redirect(`/app/survey/${surveyID}/${surveyInstance._id}/downloadCSV`);
+                res.redirect(`/app/survey/${surveyID}`);
+
             } catch (err) {
                 console.error('Error processing respondents:', err);
                 req.flash('error', 'Error adding respondents.');
+                res.redirect(`/app/survey/${surveyID}`);
             }
-
-            res.redirect(`/app/survey/${surveyID}`);
         })
         .on('error', (err) => {
             console.error('Error reading CSV:', err);
             req.flash('error', 'Error processing CSV file.');
             res.redirect(`/app/survey/${surveyID}`);
         });
+}));
+
+//Download CSV
+router.get('/:surveyID/:surveyInstanceID/downloadCSV', isLoggedIn, (req, res) => {
+    const { surveyInstanceID } = req.params;
+    const csvFilePath = path.join(__dirname, `../downloads/respondents-${surveyInstanceID}.csv`);
+
+    if (fs.existsSync(csvFilePath)) {
+        res.setHeader('Content-Disposition', `attachment; filename=Respondents-${surveyInstanceID}.csv`);
+        res.setHeader('Content-Type', 'text/csv');
+        res.download(csvFilePath, (err) => {
+            if (!err) {
+                setTimeout(() => {
+                    fs.unlinkSync(csvFilePath); // ✅ Deletes file after download
+                }, 5000);
+            }
+        });
+    } else {
+        req.flash('error', 'CSV file not found.');
+        res.redirect(`/app/survey/${req.params.surveyID}`);
+    }
+});
+
+//Upload survey status to 'MailSent' once button is clicked
+router.post("/:surveyID/:surveyInstanceID/markAsSent", isLoggedIn, catchAsync(async (req, res) => {
+    try {
+        const { surveyInstanceID } = req.params;
+
+        // Update status to "MailSent"
+        await SurveyInstance.findByIdAndUpdate(surveyInstanceID, { status: "MailSent" });
+
+        res.json({ success: true, message: "Survey status updated to 'MailSent'." });
+    } catch (error) {
+        console.error("❌ Error updating survey status:", error);
+        res.status(500).json({ success: false, message: "Failed to update survey status." });
+    }
 }));
 
 router.get('/:surveyID/list', isLoggedIn, catchAsync(async(req, res) => {

@@ -19,10 +19,10 @@
         <% } else if (respondent.progress === 'completed') { %>
             <p><b>You have already taken the survey.</b></p>
         <% } else { %>
-            <p>Welcome <%= respondent.respondentName %></p>
-            <h1>Take the <%= survey.name %></h1>
-            <p>There are <%= questions.length %> questions in this survey, and it will take you approximately <%= Math.ceil(0.8 * questions.length) %> minutes to complete. <b>Your responses are purely confidential and will not be tagged against you.</b> All questions are compulsory, unless indicated otherwise.</p>
-            <p>If you want to save your responses and come back to the same later on, please click <a href="#buttons">here</a> and click the save button. </p>
+            <p>Welcome <b><%= respondent.respondentName %></b>, </p>
+            <p>You have been invited by your organization administrator to take this survey. <%= survey.description %> We value your response and time.</p> 
+            <h1><%= survey.name %></h1>
+            <p>There are <%= questions.length %> questions in this survey, and it will take you approximately <%= Math.ceil(0.8 * questions.length) %> minutes to complete. <b>Your responses are purely confidential and will not be tagged against you.</b> All questions are compulsory, unless indicated otherwise. If you want to save your responses and come back to the same later on, please click <a href="#buttons">here</a> and click the save button.</p>
     
             <form id="surveyForm" action="/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>" method="POST">
                 <% for (category of uniqueCategories) { %>
@@ -36,11 +36,11 @@
                                         <span class="error-message" style="color: red; display: none;">(Required)</span>
                                     </p>
                                     <% for (let i = 1; i <= 5; i++) { %>
-                                        <div>
-                                            <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>" class="answer-option"
+                                        <div class="d-flex mb-2">
+                                            <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>" class="answer-option me-2" 
                                                 <% if (responseMap && responseMap[question._id] == i) { %> checked <% } %>
                                                 required>
-                                            <label><%= question['option' + i] %></label>
+                                            <label class="small"><%= question['option' + i] %></label>
                                         </div>
                                     <% } %>
                                 <% } %>
@@ -49,14 +49,14 @@
                     </div>
                 <% } %>
 
-                <div class="form-group">
-                    <label for="strengthsFeedback" class="form-label"><b></b>What are the good things about this area that you want to highlight?</label>
-                    <textarea id="strengths" name="strengthsFeedback" rows="3" placeholder="Describe the strengths of this area..." class="form-control"></textarea>
+                <div class="form-group mb-3 mt-3">
+                    <label for="strengthsFeedback" class="form-label"><b>What are the good things about this area in your organization that you want to highlight?</b></label>
+                    <textarea id="strengths" name="strengthsFeedback" rows="5" placeholder="Describe the strengths of this area..." class="form-control" required></textarea>
                 </div>
             
                 <div class="form-group">
-                    <label for="improvements" class="form-label">What can be improved about <%= survey.name %>?</label>
-                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="3" placeholder="Describe areas that need improvement..."></textarea>
+                    <label for="improvements" class="form-label"><b>What can be improved about in this area in your organization?</b></label>
+                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="5" placeholder="Describe areas that need improvement..." required></textarea>
                 </div>
                 <div id="buttons" class="my-3">
                     <button type="submit" class="mb-5 btn btn-sm btn-primary">Complete</button>
@@ -120,8 +120,6 @@
                         jsonObject[key] = value;
                     }
                 });
-
-                console.log("🔵 Debugging JSON Payload:", jsonObject); // ✅ See the actual data being sent
 
                 fetch("/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>/save", {
                     method: "POST",
