@@ -197,6 +197,125 @@ router.post("/:surveyID/:surveyInstanceID/markAsSent", isLoggedIn, catchAsync(as
     }
 }));
 
+//Download results as a csv
+router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsync(async (req, res) => {
+    try {
+        const { surveyID, surveyInstanceID } = req.params;
+        console.log("🔵 Generating CSV for Survey Instance:", surveyInstanceID);
+
+        // Fetch survey instance with respondents
+        const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
+        if (!surveyInstance) {
+            console.log("❌ Survey instance not found");
+            return res.status(404).json({ success: false, message: "Survey instance not found." });
+        }
+
+        console.log("🔵 Found Survey Instance:", surveyInstance.name);
+
+        // Fetch all questions for this survey
+        const questions = await Question.find({ survey: surveyID }).select("question");
+        const questionHeaders = questions.map(q => q.question); // Extract question texts
+
+        console.log("🔵 Found Questions:", questionHeaders);
+
+        // Prepare data for CSV
+        const resultsData = await Promise.all(
+            surveyInstance.respondents.map(async (respondent) => {
+                // Fetch all responses for this respondent
+                const responses = await Response.find({ respondent: respondent._id, surveyInstance: surveyInstanceID })
+                    .populate("question", "question"); // Get question text
+
+                // Create a response map { "question_text": response_value }
+                const responseMap = {};
+                responses.forEach(resp => {
+                    responseMap[resp.question.question] = resp.choice;
+                });
+
+                // Build row with respondent details and responses
+                const row = {
+                    respondentTeam: respondent.respondentTeam || "N/A",
+                    field1: respondent.field1 || "N/A",
+                    field2: respondent.field2 || "N/A",
+                    field3: respondent.field3 || "N/A",
+                    field4: respondent.field4 || "N/A",
+                    field5: respondent.field5 || "N/A",
+                    strengthsFeedback: respondent.strengthsFeedback || "No feedback provided",
+                    improvementsFeedback: respondent.improvementsFeedback || "No feedback provided",
+                    status: respondent.progress
+                };
+
+                // Add responses for all questions (ensuring missing ones are "N/A")
+                questionHeaders.forEach(qText => {
+                    row[qText] = responseMap[qText] || "N/A"; // Use "N/A" if response is missing
+                });
+
+                return row;
+            })
+        );
+
+        if (resultsData.length === 0) {
+            console.log("❌ No respondents found");
+            return res.status(400).json({ success: false, message: "No respondents found in this survey instance." });
+        }
+
+        console.log("🔵 Preparing to write CSV...");
+
+        // Detect user's Downloads folder
+        const downloadsDir = path.join(os.homedir(), "Downloads");
+        const fileName = `results_${surveyInstanceID}.csv`;
+        const filePath = path.join(downloadsDir, fileName);
+
+        // Ensure Downloads folder exists
+        if (!fs.existsSync(downloadsDir)) {
+            console.log("❌ Downloads folder missing, creating...");
+            fs.mkdirSync(downloadsDir, { recursive: true });
+        }
+
+        // Create CSV Writer with dynamic question headers
+        const csvWriter = createCsvWriter({
+            path: filePath,
+            header: [
+                { id: "respondentTeam", title: "Respondent Team" },
+                { id: "field1", title: "Field 1" },
+                { id: "field2", title: "Field 2" },
+                { id: "field3", title: "Field 3" },
+                { id: "field4", title: "Field 4" },
+                { id: "field5", title: "Field 5" },
+                { id: "strengthsFeedback", title: "Strengths Feedback" },
+                { id: "improvementsFeedback", title: "Improvements Feedback" },
+                { id: "status", title: "Status" },
+                ...questionHeaders.map(q => ({ id: q, title: q })) // Dynamic question columns
+            ]
+        });
+
+        await csvWriter.writeRecords(resultsData);
+        console.log(`✅ CSV File Created Successfully: ${filePath}`);
+
+        res.json({ success: true, message: "Results generated successfully!", filePath });
+
+    } catch (error) {
+        console.error("❌ Error generating results CSV:", error);
+        res.status(500).json({ success: false, message: "Failed to generate CSV." });
+    }
+}));
+
+//For serving the file as a csv with results
+router.get("/:surveyID/:surveyInstanceID/fetchCSV", isLoggedIn, (req, res) => {
+    const filePath = req.query.filePath;
+
+    if (!filePath || !fs.existsSync(filePath)) {
+        return res.status(404).json({ success: false, message: "CSV file not found." });
+    }
+
+    res.download(filePath, (err) => {
+        if (!err) {
+            setTimeout(() => {
+                fs.unlinkSync(filePath); // ✅ Delete file after download
+            }, 5000);
+        }
+    });
+});
+
 router.get('/:surveyID/list', isLoggedIn, catchAsync(async(req, res) => {
     const { surveyID } = req.params;
     const accountID = req.user._id;

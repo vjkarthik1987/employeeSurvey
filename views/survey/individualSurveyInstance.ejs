@@ -23,7 +23,7 @@
 
         <% if (surveyInstance.status === 'Created') { %>
             <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" style="display:inline;" class="btn btn-sm btn-primary">Send Email</a>
-            <button id="markAsSent" class="btn btn-sm btn-secondary">I Have Sent Email Directly</button>
+            <button id="markAsSent" class="btn btn-sm btn-secondary" onclick="markAsSent()">I Have Sent Email Directly</button>
         <% } %>
 
 
@@ -50,7 +50,10 @@
 
         <div id="result">
             <% if(surveyInstance.status === "Stopped") { %>
-                <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses"><p>Text Responses</p></a>
+                <div class="d-flex">
+                    <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses"><p>Text Responses</p></a>
+                    <button class="btn btn-sm btn-primary ms-2" id="downloadResults" onclick="downloadResults()">Download Results</button>
+                </div>
                 <% if (overallAverageScore !== null) { %>
                     <div id="details">
                         <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
@@ -111,6 +114,8 @@
     </div>
 
     <script>
+        console.log("✅ JavaScript Loaded!");
+        
         function confirmStopInstance() {
             const confirmation = prompt("Type 'stop-instance' to confirm stopping this survey instance:");
             if (confirmation === "stop-instance") {
@@ -120,7 +125,42 @@
             }
         }
 
-        document.getElementById("markAsSent").addEventListener("click", function() {
+        // To download the results
+        function downloadResults() {
+            console.log("🔵 Clicked Download Results");
+
+            fetch("/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/downloadResults", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("🔵 Server Response:", data);
+
+                if (data.success) {
+                    const fileUrl = "/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/fetchCSV?filePath=" + encodeURIComponent(data.filePath);
+                    
+                    console.log("🔵 Triggering File Download:", fileUrl);
+
+                    const link = document.createElement("a");
+                    link.href = fileUrl;
+                    link.setAttribute("download", "results_<%= surveyInstance._id %>.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert("❌ Failed to generate results: " + data.message);
+                }
+            })
+            .catch(error => {
+                alert("❌ An error occurred while downloading.");
+                console.error("🔴 Fetch Error:", error);
+            });
+        }
+
+        function markAsSent() {
+            console.log("🔵 Clicked 'I Have Sent Email Directly'");
+
             fetch("/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/markAsSent", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
@@ -136,8 +176,8 @@
             })
             .catch(error => {
                 alert("An error occurred.");
-                console.error(error);
+                console.error("🔴 Fetch Error:", error);
             });
-        });
+        } 
     </script>
 </body>
