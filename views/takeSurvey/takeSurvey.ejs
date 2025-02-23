@@ -72,7 +72,7 @@
     </div>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const totalQuestions = <%= totalQuestions %>; // ✅ Now totalQuestions is properly defined
+            const totalQuestions = <%= totalQuestions %>;
             const answeredCount = document.getElementById("answeredCount");
             const answerOptions = document.querySelectorAll(".answer-option");
             const submitButton = document.querySelector("#surveyForm button[type='submit']");
