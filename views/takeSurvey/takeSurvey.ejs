@@ -35,7 +35,7 @@
                                         <b><%= question.question %></b> <span class="required">*</span>
                                         <span class="error-message" style="color: red; display: none;">(Required)</span>
                                     </p>
-                                    <% for (let i = 1; i <= 5; i++) { %>
+                                    <% for (let i = 5; i >= 1; i--) { %>
                                         <div class="d-flex mb-2">
                                             <input type="radio" name="responses[<%= question._id %>]" value="<%= i %>" class="answer-option me-2" 
                                                 <% if (responseMap && responseMap[question._id] == i) { %> checked <% } %>
