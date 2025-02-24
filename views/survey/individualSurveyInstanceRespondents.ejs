@@ -1,0 +1,101 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+        <% if(success && success.length) { %>
+            <%- include('../partials/success') %>
+        <% } else if (error && error.length) { %>
+            <%- include('../partials/error') %>
+        <% } %>
+        <a href="/app/survey/home">Home</a><b> ></b>
+        <a href="/app/survey/<%= survey._id %>">Survey: <%= survey.name %></a><b> ></b>
+        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>">Survey: <%= surveyInstance.name %></a><b> ></b>
+        Respondents
+        <h1>Respondents</h1>
+        <a href="" class="pillLink" onclick="downloadReport()">Download Report</a>
+        <!-- ✅ Table for Respondents -->
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Band</th>
+                    <th>Location</th>
+                    <th>Team</th>
+                    <th>Gender</th>
+                    <th>Experience</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (let i = 0; i < respondents.length; i++) { %>
+                    <tr>
+                        <td><%= respondents[i].respondentName %></td>
+                        <td><%= respondents[i].respondentEmail %></td>
+                        <td><%= respondents[i].field1 || 'N/A' %></td>
+                        <td><%= respondents[i].field2 || 'N/A' %></td>
+                        <td><%= respondents[i].field3 || 'N/A' %></td>
+                        <td><%= respondents[i].field4 || 'N/A' %></td>
+                        <td><%= respondents[i].field5 || 'N/A' %></td>
+                        <td><% if (respondents[i].progress) { %>
+                            <%= respondents[i].progress.charAt(0).toUpperCase() + respondents[i].progress.slice(1) %>
+                        <% } else { %>
+                            N/A
+                        <% } %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ✅ Style for Banded Table -->
+    <style>
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f2f2f2; /* Light Gray for Odd Rows */
+        }
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #ddd; /* Adds Borders */
+            padding: 10px;
+            text-align: left;
+        }
+        .table thead {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+
+    <!-- Scripts-->
+    <script>
+        function downloadReport() {
+            console.log("🔵 Initiating Download Report...");
+
+            fetch("/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents/downloadReport", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("🔵 Server Response:", data);
+
+                if (data.success) {
+                    const fileUrl = "/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/fetchRespondentsCSV?filePath=" + encodeURIComponent(data.filePath);
+
+                    console.log("🔵 Triggering File Download:", fileUrl);
+
+                    const link = document.createElement("a");
+                    link.href = fileUrl;
+                    link.setAttribute("download", data.fileName);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert("❌ Failed to generate report: " + data.message);
+                }
+            })
+            .catch(error => {
+                alert("❌ An error occurred while downloading.");
+                console.error("🔴 Fetch Error:", error);
+            });
+        }
+    </script>
+</body>

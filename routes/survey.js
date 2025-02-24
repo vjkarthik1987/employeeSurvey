@@ -1,26 +1,51 @@
-const express          = require('express');
-const multer           = require('multer');
-const csvParser        = require('csv-parser');
-const fs               = require('fs');
-const path             = require('path');
-const upload           = multer({ dest: 'uploads/' });
-const router           = express.Router();
-const mongoose         = require('mongoose');
-const puppeteer        = require("puppeteer");
-const ejs              = require("ejs");
-const createCsvWriter  = require('csv-writer').createObjectCsvWriter;
-const os               = require('os');
-const isLoggedIn       = require('../middlewares/isLoggedIn')
-const Survey           = require('../models/Survey');
-const Question         = require('../models/Question');
-const SurveyInstance   = require('../models/SurveyInstance');
-const Respondent       = require('../models/Respondent');
-const Response         = require('../models/Response');
-const Account          = require('../models/Account');
-const catchAsync       = require('../utils/catchAsync');
-const sendEmail        = require('../utils/sendEmail');
-const summarizeText    = require("../utils/summarizer");
-const { isArray }      = require('util');
+const express              = require('express');
+const multer               = require('multer');
+const csvParser            = require('csv-parser');
+const fs                   = require('fs');
+const path                 = require('path');
+const upload               = multer({ dest: 'uploads/' });
+const router               = express.Router();
+const mongoose             = require('mongoose');
+const puppeteer            = require("puppeteer");
+const ejs                  = require("ejs");
+const createCsvWriter      = require('csv-writer').createObjectCsvWriter;
+const os                   = require('os');
+const isLoggedIn           = require('../middlewares/isLoggedIn')
+const Survey               = require('../models/Survey');
+const Question             = require('../models/Question');
+const SurveyInstance       = require('../models/SurveyInstance');
+const Respondent           = require('../models/Respondent');
+const Response             = require('../models/Response');
+const Account              = require('../models/Account');
+const catchAsync           = require('../utils/catchAsync');
+const sendEmail            = require('../utils/sendEmail');
+const summarizeText        = require("../utils/summarizer");
+const analyzeSurveyResults = require("../utils/analyzeSurveyResults");
+const { isArray }          = require('util');
+
+//Constants
+const fields = [
+    {
+        field:1,
+        name:"Band",
+    },
+    {
+        field:2,
+        name:"Location",
+    },
+    {
+        field:3,
+        name:"Team",
+    },
+    {
+        field:4,
+        name:"Gender",
+    },
+    {
+        field:5,
+        name:"Experience",
+    }
+]
 
 router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
     const surveys = await Survey.find();
@@ -316,6 +341,112 @@ router.get("/:surveyID/:surveyInstanceID/fetchCSV", isLoggedIn, (req, res) => {
     });
 });
 
+router.get("/:surveyID/:surveyInstanceID/respondents", isLoggedIn, catchAsync(async(req, res) => {
+    const { surveyID, surveyInstanceID } = req.params;
+    const accountID = req.user._id;
+    const survey = await Survey.findById(surveyID);
+    const surveyInstance = await  SurveyInstance.findById(surveyInstanceID);
+    const respondents = await Respondent.find({
+        surveyInstance: surveyInstance
+    });
+    res.render('./survey/individualSurveyInstanceRespondents', {survey, surveyInstance, respondents})
+}));
+
+//Download report of respondents
+router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedIn, catchAsync(async (req, res) => {
+    try {
+        const { surveyID, surveyInstanceID } = req.params;
+        console.log("🔵 Generating Respondents CSV for Survey Instance:", surveyInstanceID);
+
+        // Fetch survey instance with respondents
+        const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
+        if (!surveyInstance) {
+            console.log("❌ Survey instance not found");
+            return res.status(404).json({ success: false, message: "Survey instance not found." });
+        }
+
+        console.log("🔵 Found Survey Instance:", surveyInstance.name);
+
+        // Prepare data for CSV
+        const resultsData = surveyInstance.respondents.map(respondent => ({
+            respondentName: respondent.respondentName || "N/A",
+            respondentEmail: respondent.respondentEmail || "N/A",
+            band: respondent.field1 || "N/A",
+            location: respondent.field2 || "N/A",
+            team: respondent.field3 || "N/A",
+            gender: respondent.field4 || "N/A",
+            experience: respondent.field5 || "N/A",
+            status: respondent.progress ? respondent.progress.charAt(0).toUpperCase() + respondent.progress.slice(1) : "N/A"
+        }));
+
+        if (resultsData.length === 0) {
+            console.log("❌ No respondents found");
+            return res.status(400).json({ success: false, message: "No respondents found in this survey instance." });
+        }
+
+        console.log("🔵 Preparing to write CSV...");
+
+        // Detect user's Downloads or Documents folder
+        const baseDir = os.platform() === "win32" ? path.join(os.homedir(), "Documents") : path.join(os.homedir(), "Downloads");
+        const dateSuffix = new Date().toISOString().slice(2, 10).replace(/-/g, ""); // YYMMDD format
+        const fileName = `RespondentsStatus_${dateSuffix}.csv`;
+        const filePath = path.join(baseDir, fileName);
+
+        // Ensure base directory exists
+        if (!fs.existsSync(baseDir)) {
+            console.log("❌ Base directory missing, creating...");
+            fs.mkdirSync(baseDir, { recursive: true });
+        }
+
+        // Create CSV Writer
+        const csvWriter = createCsvWriter({
+            path: filePath,
+            header: [
+                { id: "respondentName", title: "Name" },
+                { id: "respondentEmail", title: "Email" },
+                { id: "band", title: "Band" },
+                { id: "location", title: "Location" },
+                { id: "team", title: "Team" },
+                { id: "gender", title: "Gender" },
+                { id: "experience", title: "Experience" },
+                { id: "status", title: "Status" }
+            ]
+        });
+
+        await csvWriter.writeRecords(resultsData);
+        console.log(`✅ CSV File Created Successfully: ${filePath}`);
+
+        res.json({ success: true, message: "Report generated successfully!", filePath, fileName });
+
+    } catch (error) {
+        console.error("❌ Error generating respondents CSV:", error);
+        res.status(500).json({ success: false, message: "Failed to generate CSV." });
+    }
+}));
+
+//Get route to serve the file
+router.get("/:surveyID/:surveyInstanceID/fetchRespondentsCSV", isLoggedIn, (req, res) => {
+    const filePath = req.query.filePath;
+
+    console.log("🔵 Fetching CSV File:", filePath);
+
+    if (!filePath || !fs.existsSync(filePath)) {
+        console.log("❌ CSV file not found.");
+        return res.status(404).json({ success: false, message: "CSV file not found." });
+    }
+
+    res.download(filePath, (err) => {
+        if (!err) {
+            console.log("✅ File downloaded, deleting...");
+            setTimeout(() => {
+                fs.unlinkSync(filePath); // ✅ Delete file after download
+            }, 5000);
+        } else {
+            console.log("❌ Error while downloading file:", err);
+        }
+    });
+});
+
 router.get('/:surveyID/list', isLoggedIn, catchAsync(async(req, res) => {
     const { surveyID } = req.params;
     const accountID = req.user._id;
@@ -432,6 +563,7 @@ router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, re
         overallAverageScore,
         categoryAverages,
         detailedScores,
+        fields,
     });
 }));
 
@@ -622,7 +754,7 @@ router.post("/:surveyID/:surveyInstanceID/edit", catchAsync(async (req, res) => 
 }));
 
 // Delete Survey Instance and Related Data
-router.delete("/:surveyID/:surveyInstanceID/delete", catchAsync(async (req, res) => {
+router.delete("/:surveyID/:surveyInstanceID/delete", isLoggedIn, catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID } = req.params;
 
     try {
@@ -645,5 +777,107 @@ router.delete("/:surveyID/:surveyInstanceID/delete", catchAsync(async (req, res)
     }
 }));
 
+//Detailed Analyis by unique values in the field
+router.get("/:surveyID/:surveyInstanceID/:fieldNumber", isLoggedIn, catchAsync(async (req, res) => {
+    const { surveyID, surveyInstanceID, fieldNumber } = req.params;
+    const survey = await Survey.findById(surveyID);
+    const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
+
+    if (!survey || !surveyInstance) {
+        req.flash("error", "Survey or Survey Instance not found.");
+        return res.redirect("/app/survey/home");
+    }
+
+    // Extract field number (convert "field1" to 1)
+    const fieldNum = parseInt(fieldNumber.replace("field", ""), 10);
+    const fieldObj = fields.find(f => f.field === fieldNum);
+    if (!fieldObj) {
+        req.flash("error", "Invalid field selected.");
+        return res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
+    }
+
+    console.log(`🔵 Processing field: ${fieldObj.name}`);
+
+    // 🔹 Step 1: Get unique values in selected field
+    const uniqueValues = [...new Set(surveyInstance.respondents.map(res => res[`field${fieldNum}`]).filter(Boolean))];
+
+    console.log(`🔵 Unique Values in ${fieldObj.name}:`, uniqueValues);
+
+    // 🔹 Step 2: Compute overall averages, category-wise averages, and question-wise averages
+    let overallAverages = {};
+    let categoryWiseAverages = {};
+    let questionAverages = {};
+
+    for (const value of uniqueValues) {
+        let totalScore = 0;
+        let responseCount = 0;
+        let categoryScores = {};
+
+        const filteredRespondents = surveyInstance.respondents.filter(res => res[`field${fieldNum}`] === value);
+
+        for (const respondent of filteredRespondents) {
+            const responses = await Response.find({
+                respondent: respondent._id,
+                surveyInstance: surveyInstanceID
+            }).populate("question");
+
+            responses.forEach(resp => {
+                totalScore += resp.choice;
+                responseCount++;
+
+                const categoryName = resp.question.category;
+                if (!categoryScores[categoryName]) categoryScores[categoryName] = { total: 0, count: 0 };
+                categoryScores[categoryName].total += resp.choice;
+                categoryScores[categoryName].count++;
+            });
+        }
+
+        overallAverages[value] = responseCount ? (totalScore / responseCount).toFixed(2) : "N/A";
+
+        categoryWiseAverages[value] = {};
+        for (const category in categoryScores) {
+            categoryWiseAverages[value][category] = (categoryScores[category].total / categoryScores[category].count).toFixed(2);
+        }
+    }
+
+    // 🔹 Step 3: Compute Question-Wise Averages
+    for (const value of uniqueValues) {
+        questionAverages[value] = {};
+        for (const respondent of surveyInstance.respondents.filter(res => res[`field${fieldNum}`] === value)) {
+            const responses = await Response.find({ respondent: respondent._id, surveyInstance: surveyInstanceID }).populate("question");
+
+            responses.forEach(resp => {
+                const questionText = resp.question.question;
+                if (!questionAverages[questionText]) questionAverages[questionText] = {};
+                if (!questionAverages[questionText][value]) questionAverages[questionText][value] = { total: 0, count: 0 };
+
+                questionAverages[questionText][value].total += resp.choice;
+                questionAverages[questionText][value].count++;
+            });
+        }
+
+        for (const question in questionAverages) {
+            if (questionAverages[question][value]) {
+                questionAverages[question][value] = (questionAverages[question][value].total / questionAverages[question][value].count).toFixed(2);
+            }
+        }
+    }
+
+    // 🔹 Step 4: Fetch AI Analysis
+    const aiInsights = await analyzeSurveyResults(fieldObj.name, uniqueValues, overallAverages, categoryWiseAverages, questionAverages);
+
+    console.log("✅ AI Insights Received");
+
+    res.render("./survey/individualSurveyInstanceDetail", {
+        survey,
+        surveyInstance,
+        fieldName: fieldObj.name,
+        uniqueValues,
+        overallAverages,
+        categoryWiseAverages,
+        questionAverages,
+        aiInsights
+    });
+}));
 
 module.exports = router;

@@ -14,6 +14,19 @@
         <%= surveyInstance.name %>
         <h1><%= surveyInstance.name %></h1>
         <p>Current Status: <%= surveyInstance.status %></p>
+        <% if (surveyInstance.status == "Stopped") { %>
+            <div class="d-flex mb-3">
+                <button class="btn btn-sm btn-secondary" id="downloadResults" onclick="downloadResults()">Download Results</button>
+            </div>
+        <% } %>
+        
+        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents" class="pillLink">Respondents</a>
+        <% if (surveyInstance.status == "Stopped") { %>
+            <% for (field of fields){ %>
+                <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/field<%= field.field%>" class="pillLink">Analysis by <%= field.name %></a>
+            <% } %>
+            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses" class="pillLink">Text Responses Analysis</a>
+        <% } %>
         
         <% if (surveyInstance.status !== 'Stopped') { %>
             <form id="stopInstanceForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/stopInstance" method="POST" style="display:inline;">
@@ -33,31 +46,12 @@
             </form>
         <% } %>
 
-        <h3>Respondents</h3>
-        <% if (surveyInstance.respondents.length > 0) { %>
-            <ul>
-                <% surveyInstance.respondents.forEach(respondent => { %>
-                    <li>
-                        <strong>Name:</strong> <%= respondent.respondentName %> |
-                        <strong>Email:</strong> <%= respondent.respondentEmail %> |
-                        <strong>Status:</strong> <%= respondent.status ? 'In Progress' : 'Completed' %>
-                    </li>
-                <% }) %>
-            </ul>
-        <% } else { %>
-            <p>No respondents found for this survey instance.</p>
-        <% } %>
-
         <div id="result">
             <% if(surveyInstance.status === "Stopped") { %>
-                <div class="d-flex">
-                    <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses"><p>Text Responses</p></a>
-                    <button class="btn btn-sm btn-primary ms-2" id="downloadResults" onclick="downloadResults()">Download Results</button>
-                </div>
                 <% if (overallAverageScore !== null) { %>
                     <div id="details">
+                        <h2>Analysis</h2>
                         <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
-                        
                         <h3>Category-wise Average Scores:</h3>
                         <ul>
                             <% for (const category in categoryAverages) { %>
@@ -84,25 +78,26 @@
                                 <% }) %>
                             </tbody>
                         </table>
-    
-                        <h3>Immediate Plan of Action</h3>
-                        <% for (const category in categoryAverages) { %>
-                            <h4><%= category %></h4>
-                            <ul>
-                                <% detailedScores
-                                    .filter(score => score.category === category)
-                                    .forEach(score => { %>
-                                    <li>
-                                        <strong><%= score.shortDescription %>:</strong> 
-                                    </li>
-                                    <% if (score.score < 5) { %>
-                                        <%= score.actionPlan || 'No action plan available' %>
-                                    <% } else { %>
-                                        <%= 'Keep up the good work' %>
-                                    <% } %>      
-                                <% }) %>
-                            </ul>
-                        <% } %>
+                        <div id="planOfAction" class="d-none">
+                            <h3>Immediate Plan of Action</h3>
+                            <% for (const category in categoryAverages) { %>
+                                <h4><%= category %></h4>
+                                <ul>
+                                    <% detailedScores
+                                        .filter(score => score.category === category)
+                                        .forEach(score => { %>
+                                        <li>
+                                            <strong><%= score.shortDescription %>:</strong> 
+                                        </li>
+                                        <% if (score.score < 5) { %>
+                                            <%= score.actionPlan || 'No action plan available' %>
+                                        <% } else { %>
+                                            <%= 'Keep up the good work' %>
+                                        <% } %>      
+                                    <% }) %>
+                                </ul>
+                            <% } %>
+                        </div>
                     </div>
                 <% } else { %>
                     <p>Average Score: Not available</p>
@@ -180,4 +175,5 @@
             });
         } 
     </script>
+    <%- include('../partials/footer') %>
 </body>
