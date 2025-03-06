@@ -22,6 +22,7 @@ const sendEmail            = require('../utils/sendEmail');
 const summarizeText        = require("../utils/summarizer");
 const analyzeSurveyResults = require("../utils/analyzeSurveyResults");
 const { isArray }          = require('util');
+require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
 
 //Constants
 const fields = [
@@ -153,10 +154,18 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                  const downloadsDir = path.join(os.homedir(), 'Downloads');  // Preferred location
                  const documentsDir = path.join(os.homedir(), 'Documents');  // Alternative
 
-                // Ensure at least one exists
-                const saveDir = fs.existsSync(downloadsDir) ? downloadsDir : documentsDir;
+                 // ✅ Use `/tmp/` for Railway, otherwise fallback to local downloads/documents
+                const saveDir = process.env.RAILWAY_ENV ? "/tmp" : (fs.existsSync(downloadsDir) ? downloadsDir : documentsDir);
+
+                // ✅ Ensure directory exists before writing
+                if (!fs.existsSync(saveDir)) {
+                    fs.mkdirSync(saveDir, { recursive: true });
+                }
+
                 // ✅ Generate CSV file in user's folder
                 const csvFilePath = path.join(saveDir, `Respondents-${surveyInstance._id}.csv`);
+
+                
                 const csvWriter = createCsvWriter({
                     path: csvFilePath,
                     header: [
