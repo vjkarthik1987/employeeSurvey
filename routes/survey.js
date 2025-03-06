@@ -196,24 +196,39 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
 }));
 
 //Download CSV
-router.get('/:surveyID/:surveyInstanceID/downloadCSV', isLoggedIn, (req, res) => {
-    const { surveyInstanceID } = req.params;
-    const csvFilePath = path.join(__dirname, `../downloads/respondents-${surveyInstanceID}.csv`);
+// router.get('/:surveyID/:surveyInstanceID/downloadCSV', isLoggedIn, (req, res) => {
+//     const { surveyInstanceID } = req.params;
+//     const csvFilePath = path.join(__dirname, `../downloads/respondents-${surveyInstanceID}.csv`);
 
-    if (fs.existsSync(csvFilePath)) {
-        res.setHeader('Content-Disposition', `attachment; filename=Respondents-${surveyInstanceID}.csv`);
-        res.setHeader('Content-Type', 'text/csv');
-        res.download(csvFilePath, (err) => {
-            if (!err) {
-                setTimeout(() => {
-                    fs.unlinkSync(csvFilePath); // ✅ Deletes file after download
-                }, 5000);
-            }
-        });
-    } else {
-        req.flash('error', 'CSV file not found.');
-        res.redirect(`/app/survey/${req.params.surveyID}`);
+//     if (fs.existsSync(csvFilePath)) {
+//         res.setHeader('Content-Disposition', `attachment; filename=Respondents-${surveyInstanceID}.csv`);
+//         res.setHeader('Content-Type', 'text/csv');
+//         res.download(csvFilePath, (err) => {
+//             if (!err) {
+//                 setTimeout(() => {
+//                     fs.unlinkSync(csvFilePath); // ✅ Deletes file after download
+//                 }, 5000);
+//             }
+//         });
+//     } else {
+//         req.flash('error', 'CSV file not found.');
+//         res.redirect(`/app/survey/${req.params.surveyID}`);
+//     }
+// });
+router.get("/:surveyID/:surveyInstanceID/downloadCSV", isLoggedIn, async (req, res) => {
+    const { surveyInstanceID } = req.params;
+    const filePath = path.join("/tmp", `Respondents-${surveyInstanceID}.csv`);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send("File not found. It may have been deleted.");
     }
+
+    res.download(filePath, `Respondents-${surveyInstanceID}.csv`, (err) => {
+        if (err) {
+            console.error("❌ Error sending file:", err);
+            res.status(500).send("Error downloading file.");
+        }
+    });
 });
 
 //Upload survey status to 'MailSent' once button is clicked
