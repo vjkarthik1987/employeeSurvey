@@ -37,7 +37,6 @@ async function analyzeSurveyResults(fieldName, uniqueValues, overallAverages, ca
 
     prompt += "\nNow, analyze the data. Provide key insights, trends, correlations, and any hidden factors.";
 
-    console.log("🔵 Sending prompt to OpenAI:\n", prompt);
 
     try {
         // 🔵 Step 2: Call OpenAI API

@@ -7,22 +7,39 @@
         <% } else if (error && error.length) { %>
             <%- include('../partials/error') %>
         <% } %>
-        <h1>Upload Respondents for Survey Instance</h1>
-        <%= survey.name %>
-        <form action="/app/survey/<%= survey._id %>/surveyInstance/upload" method="post" enctype="multipart/form-data">
-            <label for="name" class="form-label">Name your survey instance</label>
-            <input type="text" name="name" id="name" class="form-control" required>
-            
-            <label for="startDate" class="form-label">Start Date</label>
-            <input type="date" name="startDate" id="startDate" class="form-control" required>
-            
-            <label for="endDate" class="form-label">End Date</label>
-            <input type="date" name="endDate" id="endDate" class="form-control" required>
-            
-            <label for="csvFile" class="form-label">Upload CSV file</label>
-            <input type="file" name="csvFile" id="csvFile" class="form-control" accept=".csv" required>
-            
-            <button type="submit" class="btn btn-primary">Upload</button>
-        </form>
+        <h1>Create a new survey instance</h1>
+        <h2 class="fs-4"><%= survey.name %></h2>
+        <div class="col col-12 col-lg-4">
+            <form action="/app/survey/<%= survey._id %>/surveyInstance/upload" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name your survey instance</label>
+                    <input type="text" name="name" id="name" class="form-control" required placeholder="Enter a name for the survey instance...">
+                </div>
+                
+                <div class="row mx-0 d-flex px-0 mb-3">
+                    <small class="px-0"><i>The survey will automatically be inaccessible after the end date</i></small>
+                    <div class="col col-12 col-lg-6 px-0">
+                        <label for="startDate" class="form-label">Start Date for the survey</label>
+                        <input type="date" name="startDate" id="startDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="col col-12 col-lg-6 px-0">
+                        <label for="endDate" class="form-label">End Date for the survey</label>
+                        <input type="date" name="endDate" id="endDate" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="csvFile" class="form-label">Upload CSV file</label>
+                    <small><i>Upload a .csv file with the following columns - Respondent Name, Respondent Email, and five columns that depict the demographics of the respondent. Be sure to name the columns.</i></small>
+                    <input type="file" name="csvFile" id="csvFile" class="form-control" accept=".csv" required>
+                </div>
+                
+                
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+        
     </div>
+    <%- include('../partials/footer') %> 
 </body>

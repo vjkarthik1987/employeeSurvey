@@ -50,7 +50,7 @@ router.get('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async(req, r
 // Submit survey responses and mark respondent as "completed"
 router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID, respondentID } = req.params;
-    const { responses, strengthsFeedback, improvementsFeedback } = req.body; // responses is an object with question IDs as keys and choices as values
+    const { responses, strengthsFeedback, improvementsFeedback, continueFeedback, detailedFeedback1, detailedFeedback2 } = req.body; // responses is an object with question IDs as keys and choices as values
 
     // Verify that the survey, surveyInstance, and respondent exist
     const surveyInstance = await SurveyInstance.findById(surveyInstanceID);
@@ -80,11 +80,14 @@ router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req,
     respondent.progress = "completed"; //Set the progress status to completed
     respondent.strengthsFeedback = strengthsFeedback; //Save the strengths feedback
     respondent.improvementsFeedback = improvementsFeedback; //Save the improvements feedback
+    respondent.continueFeedback = continueFeedback;
+    respondent.detailedFeedback1 = detailedFeedback1;
+    respondent.detailedFeedback2 = detailedFeedback2;
     await respondent.save();
 
     // Redirect to home with success message
     req.flash('success', 'Thank you for your time and patience. Your responses have been successfully. The results will be shared by your administrator. In the meantime, please go through our website and get further insights on pricing.');
-    res.redirect('/');
+    res.redirect(`/app/takeSurvey/${surveyID}/${surveyInstanceID}/${respondentID}/endSurvey`);
 }));
 
 
@@ -92,7 +95,7 @@ router.post('/:surveyID/:surveyInstanceID/:respondentID', catchAsync(async (req,
 router.post("/:surveyID/:surveyInstanceID/:respondentID/save", catchAsync(async (req, res) => {
 
     const { surveyID, surveyInstanceID, respondentID } = req.params;
-    const { responses, strengthsFeedback, improvementsFeedback } = req.body; // Extract text-based responses
+    const { responses, strengthsFeedback, improvementsFeedback, continueFeedback, detailedFeedback1, detailedFeedback2 } = req.body; // Extract text-based responses
 
     try {
         // Validate that responses exist
@@ -131,6 +134,9 @@ router.post("/:surveyID/:surveyInstanceID/:respondentID/save", catchAsync(async 
         await Respondent.findByIdAndUpdate(respondentID, {
             strengthsFeedback,
             improvementsFeedback,
+            continueFeedback,
+            detailedFeedback1,
+            detailedFeedback2,
             progress: "saved"
         });
 
@@ -140,5 +146,12 @@ router.post("/:surveyID/:surveyInstanceID/:respondentID/save", catchAsync(async 
         res.status(500).json({ success: false, message: "Failed to save progress." });
     }
 }));
+
+router.get("/:surveyID/:surveyInstanceID/:respondentID/endSurvey", catchAsync(async(req, res) => {
+    const survey = await Survey.findById(req.params.surveyID);
+    const surveyInstance = await SurveyInstance.findById(req.params.surveyInstanceID);
+    const respondent = await Respondent.findById(req.params.respondentID);
+    res.render('./takeSurvey/endSurvey', {survey, surveyInstance, respondent});
+}))
 
 module.exports = router;

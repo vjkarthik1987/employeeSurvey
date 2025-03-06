@@ -1,7 +1,7 @@
 <% layout('./layouts/boilerplate') -%>
 <body>
     <div class="container">
-        <%- include('../partials/navbar') %>
+        <%- include('../partials/navbar_small') %>
         <% if(success && success.length) { %>
             <%- include('../partials/success') %>
         <% } else if (error && error.length) { %>
@@ -50,14 +50,30 @@
                 <% } %>
 
                 <div class="form-group mb-3 mt-3">
-                    <label for="strengthsFeedback" class="form-label"><b>What are the good things about this area in your organization that you want to highlight?</b></label>
-                    <textarea id="strengths" name="strengthsFeedback" rows="5" placeholder="Describe the strengths of this area..." class="form-control" required></textarea>
+                    <label for="strengthsFeedback" class="form-label"><b>What are one or two things we should start doing as an organization?</b></label>
+                    <textarea id="strengths" name="strengthsFeedback" rows="5" placeholder="Describe the areas that we should continue doing..." class="form-control" required></textarea>
                 </div>
             
                 <div class="form-group">
-                    <label for="improvements" class="form-label"><b>What can be improved about in this area in your organization?</b></label>
-                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="5" placeholder="Describe areas that need improvement..." required></textarea>
+                    <label for="improvements" class="form-label"><b>What are one or two things we should stop doing as an organization?</b></label>
+                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="5" placeholder="Describe areas that we need to stop..." required></textarea>
                 </div>
+
+                <div class="form-group">
+                    <label for="continue" class="form-label"><b>What are one or two things we should continue doing as an organization?</b></label>
+                    <textarea class="form-control" id="continue" name="continueFeedback" rows="5" placeholder="Describe areas that we can continue..." required></textarea>
+                </div> 
+                
+                <div class="form-group">
+                    <label for="detailedFeedback1" class="form-label"><b>If you could change one or two aspects of our work culture, what would they be?</b></label>
+                    <textarea class="form-control" id="detailedFeedback1" name="detailedFeedback1" rows="5" placeholder="If you could change one or two aspects of our work culture, what would they be?..." required></textarea>
+                </div>  
+
+                <div class="form-group">
+                    <label for="detailedFeedback2" class="form-label"><b>Is there anything else you would like to share about your experience at our organization?</b></label>
+                    <textarea class="form-control" id="detailedFeedback2" name="detailedFeedback2" rows="5" placeholder="Is there anything else you would like to share about your experience at our organization?..." required></textarea>
+                </div>  
+
                 <div id="buttons" class="my-3">
                     <button type="submit" class="mb-5 btn btn-sm btn-primary">Complete</button>
                     <button type="button" id="saveProgress" class="mb-5 btn btn-sm btn-outline-primary">Save Progress</button>

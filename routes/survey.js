@@ -655,7 +655,7 @@ router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(asyn
         const emailContent = `
             Hello ${respondent.respondentName},
 
-            You have been invited to take the survey "${survey.name}". Click the following link to participate: ${takeSurveyLink}
+            You have been invited to take the survey "${survey.name}". "${survey.description}" Click the following link to participate: ${takeSurveyLink}
 
             Thank you!
         `;
@@ -664,7 +664,7 @@ router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(asyn
         try {
             await sendEmail({
                 to: respondent.respondentEmail,
-                subject: `Assess your pricing capabilities through our ${survey.name}`,
+                subject: `Give your thoughts on our organization through our ${survey.name}`,
                 text: emailContent
             });
             console.log(`Email sent to: ${respondent.respondentEmail}`);
@@ -781,7 +781,7 @@ router.delete("/:surveyID/:surveyInstanceID/delete", isLoggedIn, catchAsync(asyn
 router.get("/:surveyID/:surveyInstanceID/:fieldNumber", isLoggedIn, catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID, fieldNumber } = req.params;
     const survey = await Survey.findById(surveyID);
-    const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
+    let surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
 
     if (!survey || !surveyInstance) {
         req.flash("error", "Survey or Survey Instance not found.");
@@ -796,14 +796,12 @@ router.get("/:surveyID/:surveyInstanceID/:fieldNumber", isLoggedIn, catchAsync(a
         return res.redirect(`/app/survey/${surveyID}/${surveyInstanceID}`);
     }
 
-    console.log(`🔵 Processing field: ${fieldObj.name}`);
 
     // 🔹 Step 1: Get unique values in selected field
     const uniqueValues = [...new Set(surveyInstance.respondents.map(res => res[`field${fieldNum}`]).filter(Boolean))];
 
-    console.log(`🔵 Unique Values in ${fieldObj.name}:`, uniqueValues);
 
-    // 🔹 Step 2: Compute overall averages, category-wise averages, and question-wise averages
+    // 🔹 Step 2: Compute averages
     let overallAverages = {};
     let categoryWiseAverages = {};
     let questionAverages = {};
@@ -863,11 +861,18 @@ router.get("/:surveyID/:surveyInstanceID/:fieldNumber", isLoggedIn, catchAsync(a
         }
     }
 
-    // 🔹 Step 4: Fetch AI Analysis
-    const aiInsights = await analyzeSurveyResults(fieldObj.name, uniqueValues, overallAverages, categoryWiseAverages, questionAverages);
+    // 🔹 Step 4: Check if AI Insights already exist
+    const analysisField = `field${fieldNum}Analysis`;
+    let aiInsights = surveyInstance[analysisField];
 
-    console.log("✅ AI Insights Received");
+    if (!aiInsights) {
+        aiInsights = await analyzeSurveyResults(fieldObj.name, uniqueValues, overallAverages, categoryWiseAverages, questionAverages);
+        // 🔹 Step 5: Store analysis in DB and update `SurveyInstance`
+        surveyInstance[analysisField] = aiInsights;
+        await surveyInstance.save();
+    }
 
+    // 🔹 Step 6: Render the page
     res.render("./survey/individualSurveyInstanceDetail", {
         survey,
         surveyInstance,

@@ -12,47 +12,54 @@
         <a href="/app/survey/home">Home</a><b> ></b>
         <a href="/app/survey/<%= survey._id %>/list">Survey: <%= survey.name %></a><b> ></b>
         <%= surveyInstance.name %>
+
         <h1><%= surveyInstance.name %></h1>
-        <p>Current Status: <%= surveyInstance.status %></p>
-        <% if (surveyInstance.status == "Stopped") { %>
-            <div class="d-flex mb-3">
-                <button class="btn btn-sm btn-secondary" id="downloadResults" onclick="downloadResults()">Download Results</button>
+
+        <div class="mb-1">
+            <p class="mb-2"><b>Current Status:</b> <%= surveyInstance.status %></p>
+            <div class="d-flex">
+                <% if (surveyInstance.status !== 'Stopped') { %>
+                    <form id="stopInstanceForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/stopInstance" method="POST" class="me-2">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmStopInstance()">Stop Instance</button>
+                    </form>
+                <% } %>
+                <% if (surveyInstance.status === 'Created') { %>
+                    <div class="mb-2">
+                        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" class="btn btn-sm btn-primary">Send Email</a>
+                        <button id="markAsSent" class="btn btn-sm btn-secondary" onclick="markAsSent()">I Have Sent Email Directly</button>
+                    </div> 
+                <% } %>
+                <% if (surveyInstance.status !== 'Stopped' && surveyInstance.status !== 'Created') { %>
+                    <form id="sendReminderForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendReminder" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-warning" class="pillLink">Send Reminder</button>
+                    </form>
+                <% } %>
+                <% if (surveyInstance.status == "Stopped") { %>
+                    <div class="d-flex">
+                        <button class="btn btn-sm btn-secondary" id="downloadResults" onclick="downloadResults()">Download Results</button>
+                    </div>
+                <% } %>
             </div>
-        <% } %>
+        </div>
+        <hr>        
         
-        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents" class="pillLink">Respondents</a>
-        <% if (surveyInstance.status == "Stopped") { %>
-            <% for (field of fields){ %>
-                <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/field<%= field.field%>" class="pillLink">Analysis by <%= field.name %></a>
-            <% } %>
-            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses" class="pillLink">Text Responses Analysis</a>
-        <% } %>
+        <div class="mb-2">
+            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents"  >See All Respondents</a>
+        </div>
         
-        <% if (surveyInstance.status !== 'Stopped') { %>
-            <form id="stopInstanceForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/stopInstance" method="POST" style="display:inline;">
-                <button type="button" class="btn btn-sm btn-danger mb-4" onclick="confirmStopInstance()">Stop Instance</button>
-            </form>
-        <% } %>
-
-        <% if (surveyInstance.status === 'Created') { %>
-            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendEmail" style="display:inline;" class="btn btn-sm btn-primary">Send Email</a>
-            <button id="markAsSent" class="btn btn-sm btn-secondary" onclick="markAsSent()">I Have Sent Email Directly</button>
-        <% } %>
-
-
-        <% if (surveyInstance.status !== 'Stopped' && surveyInstance.status !== 'Created') { %>
-            <form id="sendReminderForm" action="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/sendReminder" method="post" style="display:inline;">
-                <button type="submit" class="btn btn-sm btn-warning mb-4">Send Reminder</button>
-            </form>
-        <% } %>
-
         <div id="result">
             <% if(surveyInstance.status === "Stopped") { %>
                 <% if (overallAverageScore !== null) { %>
                     <div id="details">
                         <h2>Analysis</h2>
                         <p><strong>Overall Average Score:</strong> <%= overallAverageScore %></p>
-                        <h3>Category-wise Average Scores:</h3>
+                        <% if (surveyInstance.status == "Stopped") { %>
+                            <% for (field of fields){ %>
+                                <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/field<%= field.field%>" class="pillLink" >Analysis by <%= field.name %></a>
+                            <% } %>
+                            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses" class="pillLink">Text Responses Analysis</a>
+                        <% } %>
+                        <h3 class="mt-2">Category-wise Average Scores:</h3>
                         <ul>
                             <% for (const category in categoryAverages) { %>
                                 <li><strong><%= category %>:</strong> <%= categoryAverages[category] %></li>
@@ -60,24 +67,32 @@
                         </ul>
     
                         <h3>Detailed Scores</h3>
-                        <table border="1" cellpadding="10">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Short Description</th>
-                                    <th>Average Score</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% detailedScores.forEach(score => { %>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-dark">
                                     <tr>
-                                        <td><%= score.category %></td>
-                                        <td><%= score.shortDescription %></td>
-                                        <td><%= score.score %></td>
+                                        <th>Category</th>
+                                        <th>Short Description</th>
+                                        <th class="text-center">Average Score</th>
                                     </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <% detailedScores.forEach(score => { %>
+                                        <tr>
+                                            <td><%= score.category %></td>
+                                            <td><%= score.shortDescription %></td>
+                                            <td class="text-center fw-bold">
+                                                <% let avgScore = Number(score.score) || 0; %> <!-- Convert to number safely -->
+                                                <span class="badge <%= avgScore >= 4 ? 'bg-success' : avgScore >= 3 ? 'bg-warning' : 'bg-danger' %>">
+                                                    <%= avgScore.toFixed(2) %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                                                
                         <div id="planOfAction" class="d-none">
                             <h3>Immediate Plan of Action</h3>
                             <% for (const category in categoryAverages) { %>
@@ -103,7 +118,7 @@
                     <p>Average Score: Not available</p>
                 <% } %>
             <% } else { %>
-                <p>Scores will be visible once you stop the survey</p>
+                <small>Scores will be visible once you stop the survey, but you will not be able to restart the survey once you stop it.</small>
             <% } %>
         </div>
     </div>

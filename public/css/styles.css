@@ -155,6 +155,12 @@ h4 {
     color: #ff4429;
 }
 
+.bangers-regular {
+    font-family: "Bangers", system-ui;
+    font-weight: 400;
+    font-style: normal;
+  }
+
 /* IDs */
 
 #hero {
@@ -258,6 +264,12 @@ form h1{
 .nav-item{
     padding-top: 5px;
     text-transform: uppercase;
+}
+
+.form-label{
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1px;
 }
 
 /* Media query for tablets and smaller devices */

@@ -1,7 +1,7 @@
 {
-  "name": "pricepelican",
+  "name": "theHonestMeter",
   "version": "1.0.0",
-  "description": "Price Pelican - Survey App",
+  "description": "The Honest Meter - The Employee Survey App where employees spill the truth, one question at a time!",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

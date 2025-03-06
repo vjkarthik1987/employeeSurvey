@@ -26,7 +26,12 @@ const SurveyInstanceSchema = new mongoose.Schema({
     endDate: {
         type: Date,
         required: true,
-    }
+    },
+    field1Analysis: String,
+    field2Analysis: String,
+    field3Analysis: String,
+    field4Analysis: String,
+    field5Analysis: String,
 });
 
 const SurveyInstance = mongoose.model('SurveyInstance', SurveyInstanceSchema);
