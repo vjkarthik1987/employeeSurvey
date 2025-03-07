@@ -290,6 +290,9 @@ router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsy
                     field5: respondent.field5 || "N/A",
                     strengthsFeedback: respondent.strengthsFeedback || "No feedback provided",
                     improvementsFeedback: respondent.improvementsFeedback || "No feedback provided",
+                    continueFeedback: respondent.continueFeedback || "No feedback provided",
+                    detailedFeedback1: respondent.detailedFeedback1 || "No feedback provided",
+                    detailedFeedback2: respondent.detailedFeedback2 || "No feedback provided",
                     status: respondent.progress
                 };
 
@@ -332,6 +335,9 @@ router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsy
                 { id: "field5", title: "Field 5" },
                 { id: "strengthsFeedback", title: "Strengths Feedback" },
                 { id: "improvementsFeedback", title: "Improvements Feedback" },
+                { id: "continueFeedback", title: "Continue Feedback"},
+                { id: "detailedFeedback1", title: "Two aspects to change"},
+                { id: "detailedFeedback2", title: "Overall experience"},
                 { id: "status", title: "Status" },
                 ...questionHeaders.map(q => ({ id: q, title: q })) // Dynamic question columns
             ]
