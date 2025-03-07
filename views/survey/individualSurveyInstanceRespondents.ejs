@@ -7,64 +7,86 @@
         <% } else if (error && error.length) { %>
             <%- include('../partials/error') %>
         <% } %>
-        <a href="/app/survey/home">Home</a><b> ></b>
-        <a href="/app/survey/<%= survey._id %>">Survey: <%= survey.name %></a><b> ></b>
-        <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>">Survey: <%= surveyInstance.name %></a><b> ></b>
-        Respondents
-        <h1>Respondents</h1>
-        <a href="" class="btn btn-sm btn-secondary" onclick="downloadReport()">Download Report</a>
-        <!-- ✅ Table for Respondents -->
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Band</th>
-                    <th>Location</th>
-                    <th>Team</th>
-                    <th>Gender</th>
-                    <th>Experience</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% for (let i = 0; i < respondents.length; i++) { %>
+        
+        <!-- ✅ Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-light p-2">
+                <li class="breadcrumb-item"><a href="/app/survey/home">Home</a></li>
+                <li class="breadcrumb-item"><a href="/app/survey/<%= survey._id %>">Survey: <%= survey.name %></a></li>
+                <li class="breadcrumb-item"><a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>">Survey: <%= surveyInstance.name %></a></li>
+                <li class="breadcrumb-item active" aria-current="page">Respondents</li>
+            </ol>
+        </nav>
+
+        <h1 class="fw-bold text-primary">Respondents</h1>
+
+        <a href="#" class="btn btn-sm btn-secondary mb-3" onclick="downloadReport()">Download Report</a>
+
+        <!-- ✅ Table Container -->
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-bordered shadow-lg align-middle">
+                <thead class="table-dark">
                     <tr>
-                        <td><%= respondents[i].respondentName %></td>
-                        <td><%= respondents[i].respondentEmail %></td>
-                        <td><%= respondents[i].field1 || 'N/A' %></td>
-                        <td><%= respondents[i].field2 || 'N/A' %></td>
-                        <td><%= respondents[i].field3 || 'N/A' %></td>
-                        <td><%= respondents[i].field4 || 'N/A' %></td>
-                        <td><%= respondents[i].field5 || 'N/A' %></td>
-                        <td><% if (respondents[i].progress) { %>
-                            <%= respondents[i].progress.charAt(0).toUpperCase() + respondents[i].progress.slice(1) %>
-                        <% } else { %>
-                            N/A
-                        <% } %></td>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Band</th>
+                        <th>Location</th>
+                        <th>Team</th>
+                        <th>Gender</th>
+                        <th>Experience</th>
+                        <th>Status</th>
                     </tr>
-                <% } %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% for (let i = 0; i < respondents.length; i++) { %>
+                        <tr>
+                            <td><b><%= respondents[i].respondentName %></b></td>
+                            <td><a href="mailto:<%= respondents[i].respondentEmail %>" class="text-decoration-none text-primary"><%= respondents[i].respondentEmail %></a></td>
+                            <td><%= respondents[i].field1 || 'N/A' %></td>
+                            <td><%= respondents[i].field2 || 'N/A' %></td>
+                            <td><%= respondents[i].field3 || 'N/A' %></td>
+                            <td><%= respondents[i].field4 || 'N/A' %></td>
+                            <td><%= respondents[i].field5 || 'N/A' %></td>
+                            <td>
+                                <% if (respondents[i].progress) { %>
+                                    <span class="badge <%= respondents[i].progress === 'completed' ? 'bg-success' : 'bg-warning' %>">
+                                        <%= respondents[i].progress.charAt(0).toUpperCase() + respondents[i].progress.slice(1) %>
+                                    </span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">N/A</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- ✅ Style for Banded Table -->
+    <!-- ✅ Table Styles -->
     <style>
         .table-striped tbody tr:nth-of-type(odd) {
-            background-color: #f2f2f2; /* Light Gray for Odd Rows */
+            background-color: #f8f9fa; /* Soft Gray for Odd Rows */
+        }
+        .table-hover tbody tr:hover {
+            background-color: #e9ecef !important; /* Light Highlight on Hover */
         }
         .table-bordered th, .table-bordered td {
-            border: 1px solid #ddd; /* Adds Borders */
-            padding: 10px;
+            border: 1px solid #dee2e6; /* Softer Borders */
+            padding: 12px;
             text-align: left;
         }
         .table thead {
-            background-color: #007bff;
+            background-color: #343a40;
             color: white;
+        }
+        .table th {
+            font-size: 16px;
+            font-weight: bold;
         }
     </style>
 
-    <!-- Scripts-->
+    <!-- ✅ Download Report Script -->
     <script>
         function downloadReport() {
             console.log("🔵 Initiating Download Report...");
@@ -98,5 +120,6 @@
             });
         }
     </script>
+    
     <%- include('../partials/footer') %>
 </body>

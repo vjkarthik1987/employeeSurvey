@@ -1,0 +1,32 @@
+<% layout('./layouts/boilerplate') -%>
+<body>
+    <% if(success && success.length) { %>
+        <%- include('../partials/success') %>
+    <% } else if (error && error.length) { %>
+        <%- include('../partials/error') %>
+    <% } %>
+    <%- include('../partials/navbar') %>
+    <div id="subHero" class="d-flex flex-column justify-content-center mb-4">
+        <div class="container">
+            <h1 class="fw-bold">Read Our Expert Insights on Employee Engagement</h1>
+            <p class="lead">Discover research-backed insights and real-world examples of organizations that foster high employee engagement, motivation, and workplace satisfaction.</p>
+        </div>
+    </div>
+    <div class="container mb-4">
+        <h1 class="fw-bold">All our expert insights</h1>
+        <div class="row mx-0 px-0">
+            <% for (article of articles) { %>
+                <div class="col col-12 col-md-3 d-flex flex-column pt-2 pb-2 align-items-start justify-content-between me-2 mb-2" style="min-height: 200px; border-left: 5px solid orangered;">
+                    <div>
+                        <h2 class="fs-5"><%= article.heading %></h2>
+                        <b><small><%= article.date.toLocaleDateString('en-GB') %></small></b>
+                    </div>
+                    
+                    <a href="/thoughts/articles/<%= article._id %>" class="btn btn-sm btn-primary">Read More</a>
+                </div>
+            <% } %>
+        </div>
+        
+    </div>
+    <%- include('../partials/footer') %>
+</body>

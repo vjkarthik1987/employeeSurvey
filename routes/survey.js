@@ -134,52 +134,18 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                             progress: 'new',
                         });
                         await respondent.save();
-                        return {
-                            _id: respondent._id,
-                            respondentName: respondent.respondentName,
-                            respondentEmail: respondent.respondentEmail,
-                            surveyLink: `${req.protocol}://${req.get('host')}/app/takeSurvey/${surveyID}/${surveyInstance._id}/${respondent._id}`
-                        };
+                        return respondent._id;
                     })
                 );
 
-                surveyInstance.respondents.push(...savedRespondents.map(r => r._id));
+                surveyInstance.respondents.push(...savedRespondents);
                 await surveyInstance.save();
 
                 // Update account with the new survey instance
                 await Account.findByIdAndUpdate(accountID, { $push: { surveyInstances: surveyInstance._id } });
 
-                // // ✅ Generate CSV file for download
-                //  // ✅ Detect User's Downloads or Documents Folder
-                //  const downloadsDir = path.join(os.homedir(), 'Downloads');  // Preferred location
-                //  const documentsDir = path.join(os.homedir(), 'Documents');  // Alternative
-
-                //  // ✅ Use `/tmp/` for Railway, otherwise fallback to local downloads/documents
-                // const saveDir = process.env.RAILWAY_ENV ? "/tmp" : (fs.existsSync(downloadsDir) ? downloadsDir : documentsDir);
-
-                // // ✅ Ensure directory exists before writing
-                // if (!fs.existsSync(saveDir)) {
-                //     fs.mkdirSync(saveDir, { recursive: true });
-                // }
-
-                // // ✅ Generate CSV file in user's folder
-                // const csvFilePath = path.join(saveDir, `Respondents-${surveyInstance._id}.csv`);
-
-                
-                // const csvWriter = createCsvWriter({
-                //     path: csvFilePath,
-                //     header: [
-                //         { id: 'respondentName', title: 'Name' },
-                //         { id: 'respondentEmail', title: 'Email' },
-                //         { id: 'surveyLink', title: 'Survey Link' },
-                //         { id: '_id', title: 'ID'},
-                //     ]
-                // });
-
-                // await csvWriter.writeRecords(savedRespondents);
-                // req.flash('success', 'Survey instance and respondents added successfully! ');
-                // res.redirect(`/app/survey/${surveyID}`);
-
+                req.flash('success', 'Survey instance and respondents added successfully!');
+                res.redirect(`/app/survey/${surveyID}`);
             } catch (err) {
                 console.error('Error processing respondents:', err);
                 req.flash('error', 'Error adding respondents.');
@@ -193,41 +159,6 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
         });
 }));
 
-//Download CSV
-// router.get('/:surveyID/:surveyInstanceID/downloadCSV', isLoggedIn, (req, res) => {
-//     const { surveyInstanceID } = req.params;
-//     const csvFilePath = path.join(__dirname, `../downloads/respondents-${surveyInstanceID}.csv`);
-
-//     if (fs.existsSync(csvFilePath)) {
-//         res.setHeader('Content-Disposition', `attachment; filename=Respondents-${surveyInstanceID}.csv`);
-//         res.setHeader('Content-Type', 'text/csv');
-//         res.download(csvFilePath, (err) => {
-//             if (!err) {
-//                 setTimeout(() => {
-//                     fs.unlinkSync(csvFilePath); // ✅ Deletes file after download
-//                 }, 5000);
-//             }
-//         });
-//     } else {
-//         req.flash('error', 'CSV file not found.');
-//         res.redirect(`/app/survey/${req.params.surveyID}`);
-//     }
-// });
-// router.get("/:surveyID/:surveyInstanceID/downloadCSV", isLoggedIn, async (req, res) => {
-//     const { surveyInstanceID } = req.params;
-//     const filePath = path.join("/tmp", `Respondents-${surveyInstanceID}.csv`);
-
-//     if (!fs.existsSync(filePath)) {
-//         return res.status(404).send("File not found. It may have been deleted.");
-//     }
-
-//     res.download(filePath, `Respondents-${surveyInstanceID}.csv`, (err) => {
-//         if (err) {
-//             console.error("❌ Error sending file:", err);
-//             res.status(500).send("Error downloading file.");
-//         }
-//     });
-// });
 
 //Upload survey status to 'MailSent' once button is clicked
 router.post("/:surveyID/:surveyInstanceID/markAsSent", isLoggedIn, catchAsync(async (req, res) => {
@@ -440,7 +371,8 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
                 { id: "team", title: "Team" },
                 { id: "gender", title: "Gender" },
                 { id: "experience", title: "Experience" },
-                { id: "status", title: "Status" }
+                { id: "status", title: "Status" },
+                { id: "respondentLink", title: "Survey Link"}
             ]
         });
 
@@ -679,23 +611,31 @@ router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(asyn
 
     // Send emails to all respondents
     for (const respondent of surveyInstance.respondents) {
-        // Construct the link for each respondent to take the survey
+        // Construct the survey link for each respondent
         const takeSurveyLink = `${req.protocol}://${req.get('host')}/app/takeSurvey/${surveyID}/${surveyInstanceID}/${respondent._id}`;
-
-        // Compose email content
+    
+        // Compose email content with proper formatting
         const emailContent = `
-            Hello ${respondent.respondentName},
-
-            You have been invited to take the survey "${survey.name}". "${survey.description}" Click the following link to participate: ${takeSurveyLink}
-
-            Thank you!
-        `;
-
-        // Send the email using the sendEmail utility
+    Hello ${respondent.respondentName},
+    
+    This is a trial email, and intended for testing. Please access this link, and fill out the survey, as it will be useful to see if this link works or not. Please do not spend time in reading through the survey. This survey is intended to be launched next week across our organization to kickstart the planning process. 
+    
+    You have been invited to take the survey **"${survey.name}"**.
+    
+    "${survey.description}"
+    
+    Click the link below to participate:
+    ${takeSurveyLink}
+    
+    Thank you!
+    CEOs Office
+    `;
+    
+        // Send the email
         try {
             await sendEmail({
                 to: respondent.respondentEmail,
-                subject: `Give your thoughts on our organization through our ${survey.name}`,
+                subject: `Give your thoughts on our organization through the ${survey.name} survey`,
                 text: emailContent
             });
             console.log(`Email sent to: ${respondent.respondentEmail}`);
