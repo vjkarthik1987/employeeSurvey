@@ -149,38 +149,36 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
                 // Update account with the new survey instance
                 await Account.findByIdAndUpdate(accountID, { $push: { surveyInstances: surveyInstance._id } });
 
-                // ✅ Generate CSV file for download
-                 // ✅ Detect User's Downloads or Documents Folder
-                 const downloadsDir = path.join(os.homedir(), 'Downloads');  // Preferred location
-                 const documentsDir = path.join(os.homedir(), 'Documents');  // Alternative
+                // // ✅ Generate CSV file for download
+                //  // ✅ Detect User's Downloads or Documents Folder
+                //  const downloadsDir = path.join(os.homedir(), 'Downloads');  // Preferred location
+                //  const documentsDir = path.join(os.homedir(), 'Documents');  // Alternative
 
-                 // ✅ Use `/tmp/` for Railway, otherwise fallback to local downloads/documents
-                const saveDir = process.env.RAILWAY_ENV ? "/tmp" : (fs.existsSync(downloadsDir) ? downloadsDir : documentsDir);
+                //  // ✅ Use `/tmp/` for Railway, otherwise fallback to local downloads/documents
+                // const saveDir = process.env.RAILWAY_ENV ? "/tmp" : (fs.existsSync(downloadsDir) ? downloadsDir : documentsDir);
 
-                // ✅ Ensure directory exists before writing
-                if (!fs.existsSync(saveDir)) {
-                    fs.mkdirSync(saveDir, { recursive: true });
-                }
+                // // ✅ Ensure directory exists before writing
+                // if (!fs.existsSync(saveDir)) {
+                //     fs.mkdirSync(saveDir, { recursive: true });
+                // }
 
-                // ✅ Generate CSV file in user's folder
-                const csvFilePath = path.join(saveDir, `Respondents-${surveyInstance._id}.csv`);
+                // // ✅ Generate CSV file in user's folder
+                // const csvFilePath = path.join(saveDir, `Respondents-${surveyInstance._id}.csv`);
 
                 
-                const csvWriter = createCsvWriter({
-                    path: csvFilePath,
-                    header: [
-                        { id: 'respondentName', title: 'Name' },
-                        { id: 'respondentEmail', title: 'Email' },
-                        { id: 'surveyLink', title: 'Survey Link' },
-                        { id: '_id', title: 'ID'},
-                    ]
-                });
+                // const csvWriter = createCsvWriter({
+                //     path: csvFilePath,
+                //     header: [
+                //         { id: 'respondentName', title: 'Name' },
+                //         { id: 'respondentEmail', title: 'Email' },
+                //         { id: 'surveyLink', title: 'Survey Link' },
+                //         { id: '_id', title: 'ID'},
+                //     ]
+                // });
 
-                await csvWriter.writeRecords(savedRespondents);
-                req.flash('success', 'Survey instance and respondents added successfully! The CSV is saved in your downloads directory or your documents folder.');
-
-                //res.redirect(`/app/survey/${surveyID}/${surveyInstance._id}/downloadCSV`);
-                res.redirect(`/app/survey/${surveyID}`);
+                // await csvWriter.writeRecords(savedRespondents);
+                // req.flash('success', 'Survey instance and respondents added successfully! ');
+                // res.redirect(`/app/survey/${surveyID}`);
 
             } catch (err) {
                 console.error('Error processing respondents:', err);
@@ -215,21 +213,21 @@ router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFi
 //         res.redirect(`/app/survey/${req.params.surveyID}`);
 //     }
 // });
-router.get("/:surveyID/:surveyInstanceID/downloadCSV", isLoggedIn, async (req, res) => {
-    const { surveyInstanceID } = req.params;
-    const filePath = path.join("/tmp", `Respondents-${surveyInstanceID}.csv`);
+// router.get("/:surveyID/:surveyInstanceID/downloadCSV", isLoggedIn, async (req, res) => {
+//     const { surveyInstanceID } = req.params;
+//     const filePath = path.join("/tmp", `Respondents-${surveyInstanceID}.csv`);
 
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send("File not found. It may have been deleted.");
-    }
+//     if (!fs.existsSync(filePath)) {
+//         return res.status(404).send("File not found. It may have been deleted.");
+//     }
 
-    res.download(filePath, `Respondents-${surveyInstanceID}.csv`, (err) => {
-        if (err) {
-            console.error("❌ Error sending file:", err);
-            res.status(500).send("Error downloading file.");
-        }
-    });
-});
+//     res.download(filePath, `Respondents-${surveyInstanceID}.csv`, (err) => {
+//         if (err) {
+//             console.error("❌ Error sending file:", err);
+//             res.status(500).send("Error downloading file.");
+//         }
+//     });
+// });
 
 //Upload survey status to 'MailSent' once button is clicked
 router.post("/:surveyID/:surveyInstanceID/markAsSent", isLoggedIn, catchAsync(async (req, res) => {
@@ -354,7 +352,7 @@ router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsy
     }
 }));
 
-//For serving the file as a csv with results
+//For serving the results file as a csv with results
 router.get("/:surveyID/:surveyInstanceID/fetchCSV", isLoggedIn, (req, res) => {
     const filePath = req.query.filePath;
 
@@ -371,6 +369,7 @@ router.get("/:surveyID/:surveyInstanceID/fetchCSV", isLoggedIn, (req, res) => {
     });
 });
 
+//Show respondents detail page
 router.get("/:surveyID/:surveyInstanceID/respondents", isLoggedIn, catchAsync(async(req, res) => {
     const { surveyID, surveyInstanceID } = req.params;
     const accountID = req.user._id;
@@ -401,6 +400,8 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
         const resultsData = surveyInstance.respondents.map(respondent => ({
             respondentName: respondent.respondentName || "N/A",
             respondentEmail: respondent.respondentEmail || "N/A",
+            respondentID: respondent._id || "N/A",
+            respondentLink: `${req.protocol}://${req.get('host')}/app/takeSurvey/${surveyID}/${surveyInstance._id}/${respondent._id}`,
             band: respondent.field1 || "N/A",
             location: respondent.field2 || "N/A",
             team: respondent.field3 || "N/A",
