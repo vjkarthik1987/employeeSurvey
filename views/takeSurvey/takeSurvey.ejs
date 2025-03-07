@@ -20,9 +20,9 @@
             <p><b>You have already taken the survey.</b></p>
         <% } else { %>
             <p>Welcome <b><%= respondent.respondentName %></b>, </p>
-            <p>You have been invited by your organization administrator to take this survey. <%= survey.description %> We value your response and time.</p> 
-            <h1><%= survey.name %></h1>
-            <p>There are <%= questions.length %> questions in this survey, and it will take you approximately <%= Math.ceil(0.8 * questions.length) %> minutes to complete. <b>Your responses are purely confidential and will not be tagged against you.</b> All questions are compulsory, unless indicated otherwise. If you want to save your responses and come back to the same later on, please click <a href="#buttons">here</a> and click the save button.</p>
+            <p>As part of our planning process for the next year, we would like to start off a brief feedback on howe we have performed as an organization across several key aspects. <%= survey.description %> Your responses will be extremely valuable as we move ahead in the next phase in our journey. And yes, thank you for being part of SunTec. It means a lot to us.</p> 
+            <h2 class="text-primary">About the <%= survey.name %></h2>
+            <p>There are <%= questions.length %> questions in this survey plus a few open-ended questions, and it will take you approximately <%= Math.ceil(0.5 * questions.length) + 2 %> minutes to complete. <b>Your responses will be kept confidential at all costs and will not be tagged against you.</b> Please fill in all questions. If you want to save your responses and come back to the same later on, please click the save progress button.</p>
     
             <form id="surveyForm" action="/app/takeSurvey/<%= survey._id %>/<%= surveyInstance._id %>/<%= respondent._id %>" method="POST">
                 <% for (category of uniqueCategories) { %>
@@ -33,7 +33,7 @@
                                 <% if (question.category == category) { %>
                                     <p class="mb-1 question" data-question-id="<%= question._id %>">
                                         <b><%= question.question %></b> <span class="required">*</span>
-                                        <span class="error-message" style="color: red; display: none;">(Required)</span>
+                                        <span class="error-message fs-5" style="color: red; display: none;">(Required)</span>
                                     </p>
                                     <% for (let i = 5; i >= 1; i--) { %>
                                         <div class="d-flex mb-2">
@@ -49,34 +49,48 @@
                     </div>
                 <% } %>
 
+                <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                    <span class="me-2">⚠️</span> 
+                    <p class="mb-0">
+                        Please note that you cannot save your open ended text responses starting from here and come back later. You will have to finish it in one go. 
+                        It won't take more than <strong>3-4 minutes</strong>. Sorry for the trouble 😒.
+                    </p>
+                </div>
+
                 <div class="form-group mb-3 mt-3">
-                    <label for="strengthsFeedback" class="form-label"><b>What are one or two things we should start doing as an organization?</b></label>
-                    <textarea id="strengths" name="strengthsFeedback" rows="5" placeholder="Describe the areas that we should continue doing..." class="form-control" required></textarea>
+                    <label for="strengthsFeedback" class="mb-1"><b>What are one or two things we should start doing as an organization?</b></label>
+                    <textarea id="strengths" name="strengthsFeedback" rows="5" placeholder="Describe the areas that we should start doing..." class="form-control" required></textarea>
                 </div>
             
                 <div class="form-group">
-                    <label for="improvements" class="form-label"><b>What are one or two things we should stop doing as an organization?</b></label>
-                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="5" placeholder="Describe areas that we need to stop..." required></textarea>
+                    <label for="improvements" class="mb-1"><b>What are one or two things we should stop doing as an organization?</b></label>
+                    <textarea class="form-control" id="improvements" name="improvementsFeedback" rows="5" placeholder="Describe areas that we need to stop doing..." required></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="continue" class="form-label"><b>What are one or two things we should continue doing as an organization?</b></label>
-                    <textarea class="form-control" id="continue" name="continueFeedback" rows="5" placeholder="Describe areas that we can continue..." required></textarea>
+                    <label for="continue" class="mb-1"><b>What are one or two things we should continue doing as an organization?</b></label>
+                    <textarea class="form-control" id="continue" name="continueFeedback" rows="5" placeholder="Describe areas that we should continue doing..." required></textarea>
                 </div> 
                 
                 <div class="form-group">
-                    <label for="detailedFeedback1" class="form-label"><b>If you could change one or two aspects of our work culture, what would they be?</b></label>
-                    <textarea class="form-control" id="detailedFeedback1" name="detailedFeedback1" rows="5" placeholder="If you could change one or two aspects of our work culture, what would they be?..." required></textarea>
+                    <label for="detailedFeedback1" class="mb-1"><b>If you could change one or two aspects of our work culture, what would they be?</b></label>
+                    <textarea class="form-control" id="detailedFeedback1" name="detailedFeedback1" rows="5" placeholder="If you could change one or two aspects in our work culture, what would they be. Let your thoughts out..." required></textarea>
                 </div>  
 
                 <div class="form-group">
-                    <label for="detailedFeedback2" class="form-label"><b>Is there anything else you would like to share about your experience at our organization?</b></label>
-                    <textarea class="form-control" id="detailedFeedback2" name="detailedFeedback2" rows="5" placeholder="Is there anything else you would like to share about your experience at our organization?..." required></textarea>
+                    <label for="detailedFeedback2" class="mb-1"><b>Is there anything else you would like to share about your experience at our organization?</b></label>
+                    <textarea class="form-control" id="detailedFeedback2" name="detailedFeedback2" rows="5" placeholder="Is there anything else you would like to share about your experience at our organization in the past one year..." required></textarea>
                 </div>  
 
                 <div id="buttons" class="my-3">
-                    <button type="submit" class="mb-5 btn btn-sm btn-primary">Complete</button>
-                    <button type="button" id="saveProgress" class="mb-5 btn btn-sm btn-outline-primary">Save Progress</button>
+                    <button type="submit" class="mb-5 btn btn-sm btn-primary">I am done ✅</button>
+                    <!-- <button type="button" id="saveProgress" class="mb-5 btn btn-sm btn-outline-primary">Save Progress</button> -->
+                </div>
+
+                <div id="floatingSaveButton">
+                    <button type="button" id="saveProgress" class="btn btn-lg btn-primary shadow">
+                        Save Progress
+                    </button>
                 </div>
             </form>
     

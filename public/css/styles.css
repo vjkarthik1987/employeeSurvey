@@ -239,6 +239,12 @@ h4 {
     justify-content: center;
 }
 
+#floatingSaveButton {
+    position: fixed;
+    bottom: 50px; /* Above the progress footer */
+    right: 20px;
+    z-index: 1000;
+}
 
 form h1{
     font-size: 24px;
@@ -281,6 +287,13 @@ form h1{
 
     .main-content {
         margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    #floatingSaveButton {
+        bottom: 70px; /* Slightly higher for smaller screens */
+        right: 10px;
     }
 }
 

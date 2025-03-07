@@ -6,6 +6,7 @@ const SurveyInstanceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:'Survey',
     },
+    description: String,
     account: {
         type: mongoose.Schema.Types.ObjectId,
         ref:'Account',

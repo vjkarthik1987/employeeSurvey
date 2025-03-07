@@ -58,7 +58,7 @@ router.get('/home', isLoggedIn, catchAsync(async (req, res) => {
     // Fetch the 5 most recent survey instances linked to the user's account
     const recentSurveyInstances = await SurveyInstance.find({ account: user._id })
         .populate('survey', 'name') // Populate survey details (only name)
-        .sort({ startDate: -1 }) // Sort by most recent first
+        .sort({ _id: -1 }) // Sort by most recent first
         .limit(5) // Get only the last 5 instances
         .lean();
     
@@ -91,13 +91,14 @@ router.get('/:surveyID/surveyInstance', isLoggedIn, catchAsync(async (req, res) 
 router.post('/:surveyID/surveyInstance/upload', isLoggedIn, upload.single('csvFile'), catchAsync(async (req, res) => {
     const { surveyID } = req.params;
     const accountID = req.user._id;
-    const { name, startDate, endDate } = req.body;
+    const { name, startDate, endDate, description } = req.body;
 
     // Create a new survey instance
     const surveyInstance = new SurveyInstance({
         survey: surveyID,
         account: accountID,
         name,
+        description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         status: 'Created',
@@ -721,7 +722,7 @@ router.post("/:surveyID/:surveyInstanceID/edit", catchAsync(async (req, res) => 
         req.flash("error", "Failed to update survey instance.");
     }
 
-    res.redirect(`/app/survey/${surveyID}/list`);
+    res.redirect(`/app/survey/${surveyID}`);
 }));
 
 // Delete Survey Instance and Related Data
