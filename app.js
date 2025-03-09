@@ -4,6 +4,7 @@ const methodOverride       = require('method-override');
 const path                 = require('path');
 const ejsMate              = require('ejs-mate');
 const session              = require('express-session');
+const MongoStore           = require('connect-mongo');
 const flash                = require('connect-flash');
 const passport             = require('passport');
 const catchAsync           = require('./utils/catchAsync');
@@ -27,12 +28,28 @@ app.use(bodyParser.json());
 app.use(methodOverride('_method'));
 
 // Session and passport initialization
+// app.use(session({
+//     secret: 'your_secret_key',
+//     resave: false, // Avoid resaving sessions unnecessarily
+//     saveUninitialized: false, // Avoid saving uninitialized sessions
+//     cookie: { secure: false }  // If you're not using HTTPS, ensure this is false
+// }));
+
 app.use(session({
-    secret: 'your_secret_key',
-    resave: false, // Avoid resaving sessions unnecessarily
-    saveUninitialized: false, // Avoid saving uninitialized sessions
-    cookie: { secure: false }  // If you're not using HTTPS, ensure this is false
+    secret: process.env.SESSION_SECRET,  // Keep this secure
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI, // Your MongoDB connection
+        ttl: 14 * 24 * 60 * 60 // Sessions expire in 14 days
+    }),
+    cookie: {
+        secure: process.env.NODE_ENV === "production", // Set to true if using HTTPS
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+    }
 }));
+
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
