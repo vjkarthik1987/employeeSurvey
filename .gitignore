@@ -6,3 +6,4 @@ seeders/
 createSurvey.js
 createQuestions.js
 deleteQuestions.js
+load-test.json
