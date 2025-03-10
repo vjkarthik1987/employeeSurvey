@@ -212,7 +212,8 @@ router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsy
 
                 // Build row with respondent details and responses
                 const row = {
-                    respondentTeam: respondent.respondentTeam || "N/A",
+                    respondentName: respondent.respondentName || "N/A",
+                    respondentEmail: respondent.respondentEmail || 'N/A',
                     field1: respondent.field1 || "N/A",
                     field2: respondent.field2 || "N/A",
                     field3: respondent.field3 || "N/A",
@@ -257,7 +258,8 @@ router.post("/:surveyID/:surveyInstanceID/downloadResults", isLoggedIn, catchAsy
         const csvWriter = createCsvWriter({
             path: filePath,
             header: [
-                { id: "respondentTeam", title: "Respondent Team" },
+                { id: "respondentName", title: "Respondent Name" },
+                { id: "respondentEmail", title: "Respondent Email"},
                 { id: "field1", title: "Field 1" },
                 { id: "field2", title: "Field 2" },
                 { id: "field3", title: "Field 3" },
@@ -317,7 +319,6 @@ router.get("/:surveyID/:surveyInstanceID/respondents", isLoggedIn, catchAsync(as
 router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedIn, catchAsync(async (req, res) => {
     try {
         const { surveyID, surveyInstanceID } = req.params;
-        console.log("🔵 Generating Respondents CSV for Survey Instance:", surveyInstanceID);
 
         // Fetch survey instance with respondents
         const surveyInstance = await SurveyInstance.findById(surveyInstanceID).populate("respondents");
@@ -326,7 +327,6 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
             return res.status(404).json({ success: false, message: "Survey instance not found." });
         }
 
-        console.log("🔵 Found Survey Instance:", surveyInstance.name);
 
         // Prepare data for CSV
         const resultsData = surveyInstance.respondents.map(respondent => ({
@@ -346,8 +346,6 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
             console.log("❌ No respondents found");
             return res.status(400).json({ success: false, message: "No respondents found in this survey instance." });
         }
-
-        console.log("🔵 Preparing to write CSV...");
 
         // Detect user's Downloads or Documents folder
         const baseDir = os.platform() === "win32" ? path.join(os.homedir(), "Documents") : path.join(os.homedir(), "Downloads");
@@ -378,7 +376,6 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
         });
 
         await csvWriter.writeRecords(resultsData);
-        console.log(`✅ CSV File Created Successfully: ${filePath}`);
 
         res.json({ success: true, message: "Report generated successfully!", filePath, fileName });
 
@@ -392,7 +389,6 @@ router.post("/:surveyID/:surveyInstanceID/respondents/downloadReport", isLoggedI
 router.get("/:surveyID/:surveyInstanceID/fetchRespondentsCSV", isLoggedIn, (req, res) => {
     const filePath = req.query.filePath;
 
-    console.log("🔵 Fetching CSV File:", filePath);
 
     if (!filePath || !fs.existsSync(filePath)) {
         console.log("❌ CSV file not found.");
@@ -422,6 +418,7 @@ router.get('/:surveyID/list', isLoggedIn, catchAsync(async(req, res) => {
     res.render('./survey/listSurveyInstance', {surveyInstances});
 }));
 
+//Show details of survey instance
 router.get('/:surveyID/:surveyInstanceID', isLoggedIn, catchAsync(async (req, res) => {
     const { surveyID, surveyInstanceID } = req.params;
 
@@ -636,7 +633,7 @@ router.get('/:surveyID/:surveyInstanceID/sendEmail', isLoggedIn, catchAsync(asyn
         try {
             await sendEmail({
                 to: respondent.respondentEmail,
-                subject: `Give your thoughts on our organization through the ${survey.name} survey`,
+                subject: `Give your thoughts on how we fared as an organization in the last one year through the ${survey.name}`,
                 text: emailContent
             });
             console.log(`Email sent to: ${respondent.respondentEmail}`);

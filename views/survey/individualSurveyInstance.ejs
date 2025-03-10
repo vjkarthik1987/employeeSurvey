@@ -43,7 +43,9 @@
         <hr>        
         
         <div class="mb-2">
-            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents"  >See All Respondents</a>
+            <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/respondents">
+                See All Respondents (<%= surveyInstance.respondents.filter(r => r.progress === 'completed').length %>/<%= surveyInstance.respondents.length %>)
+            </a>
         </div>
         
         <div id="result">
@@ -59,12 +61,31 @@
                             <a href="/app/survey/<%= survey._id %>/<%= surveyInstance._id %>/textResponses" class="pillLink">Text Responses Analysis</a>
                         <% } %>
                         <h3 class="mt-2">Category-wise Average Scores:</h3>
-                        <ul>
-                            <% for (const category in categoryAverages) { %>
-                                <li><strong><%= category %>:</strong> <%= categoryAverages[category] %></li>
-                            <% } %>
-                        </ul>
-    
+
+                        <div class="table-responsive mt-3">
+                            <table class="table table-striped table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Category</th>
+                                        <th class="text-center">Average Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% for (const category in categoryAverages) { %>
+                                        <tr>
+                                            <td><strong><%= category %></strong></td>
+                                            <td class="text-center fw-bold">
+                                                <% let avgScore = Number(categoryAverages[category]) || 0; %>
+                                                <span class="badge <%= avgScore >= 4 ? 'bg-success' : avgScore >= 3 ? 'bg-warning' : 'bg-danger' %>">
+                                                    <%= avgScore.toFixed(2) %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+     
                         <h3>Detailed Scores</h3>
                         <div class="table-responsive">
                             <table class="table table-striped table-hover table-bordered align-middle">
