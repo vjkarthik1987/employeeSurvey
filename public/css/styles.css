@@ -168,9 +168,8 @@ h4 {
 /* IDs */
 
 #hero {
-    min-height: 30vh;
+    min-height: 90vh;
     margin-bottom: 10px;
-    max-height: 80vh;
 }
 
 #offerings {
