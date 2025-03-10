@@ -169,7 +169,8 @@ h4 {
 
 #hero {
     min-height: 30vh;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    max-height: 80vh;
 }
 
 #offerings {
